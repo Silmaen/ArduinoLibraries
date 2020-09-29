@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+.idea
+Arduino_MKRENV
+HAMqttDevice
+Kalman_Filter_Library
+MQTT
+Mirf
+RTClib
+SHT1x
+SdFat
+ShiftPWM-master
+TinyWireM
+WaveHC
+WiFiNINA
