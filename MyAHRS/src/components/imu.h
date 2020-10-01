@@ -19,16 +19,17 @@ struct vec3d{
 	vec3d& operator=(const vec3d&) = default;
 	vec3d& operator=(vec3d&&) = default;
 	vec3d(const i2c_utils::v3& o){x=(float)o.x;y=(float)o.y;z=(float)o.z;}
-	vec3d& operator*=(const float a){x*=a;y*=a;z*=a;return *this}
-	vec3d operator*(const float a) const{v(*this);v*=a;return v;}
+	vec3d& operator*=(const float a){x*=a;y*=a;z*=a;return *this;}
+	vec3d operator*(const float a) const{vec3d v(*this);v*=a;return v;}
 };
 
 class imu{
+public:
 	imu(const float currentAltitude=0);
 	vec3d getAcceleration() const;
-	vec3D getRotationRate() const;
+	vec3d getRotationRate() const;
 	void setGyroRange(const l3gd20::gyroRange& range);
-	vec3D getMagneticField() const;
+	vec3d getMagneticField() const;
 	void setMagGain(const lsm303::MagGain& gain);
 	void setMagRate(const lsm303::MagRate& rate);
 	float getPressure() const;

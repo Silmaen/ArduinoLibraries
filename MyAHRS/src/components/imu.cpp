@@ -3,26 +3,39 @@
 //
 
 #include "imu.h"
+namespace l3gd20 {
+	float getSensitivity(gyroRange r){
+		switch (r){
+			case gyroRange::R250DPS:
+				return GyroSensitivity_250DPS;
+			case gyroRange::R500DPS:
+				return GyroSensitivity_500DPS;
+			case gyroRange::R2000DPS:
+				return GyroSensitivity_2000DPS;
+		}
+		return 0;
+	}
+}
 
 imu::imu(const float currentAltitude): qnh{1013.25}{
 	Wire.begin();
 	setReferenceAltitude(currentAltitude);
 	// BMP085
 	// temperature pressure calibration
-	if (i2c_utils::read8((bmp085::AddressPress, bmp085::pressRegister::CHIPID) == 0x5)
+	if (i2c_utils::read8(bmp085::AddressPress, (byte)bmp085::pressRegister::CHIPID) == 0x5)
 		getCalibrationData();
 	// LSM303
 	// Enable the magnetometer
-	i2c_utils::writeCommand(lsm303::AddressMag, lsm303::MagRegisters::MR_REG_M, 0x00);
-	if (i2c_utils::read8(lsm303::AddressMag, lsm303::MagRegisters::CRA_REG_M) == 0x10)
+	i2c_utils::writeCommand(lsm303::AddressMag, (byte)lsm303::MagRegisters::MR_REG_M, 0x00);
+	if (i2c_utils::read8(lsm303::AddressMag, (byte)lsm303::MagRegisters::CRA_REG_M) == 0x10)
 		// Set the gain to a known level (Make it as parameter)
 		setMagGain(lsm303::MagGain::G1_3);
 	// Enable the accelerometer (100Hz)
-	i2c_utils::writeCommand(lsm303::AddressAccel, lsm303::AccelRegisters::CTRL_REG1_A, 0x57);
+	i2c_utils::writeCommand(lsm303::AddressAccel, (byte)lsm303::AccelRegisters::CTRL_REG1_A, 0x57);
 	// L3GD20
 	// init gyro
-	i2c_utils::writeCommand(l3gd20::AdressGyro, l3gd20::gyroRegisters::CTRL_REG1, 0x00);
-	i2c_utils::writeCommand(l3gd20::AdressGyro, l3gd20::gyroRegisters::CTRL_REG1, 0x0F);
+	i2c_utils::writeCommand(l3gd20::AdressGyro, (byte)l3gd20::gyroRegisters::CTRL_REG1, 0x00);
+	i2c_utils::writeCommand(l3gd20::AdressGyro, (byte)l3gd20::gyroRegisters::CTRL_REG1, 0x0F);
 	setGyroRange(l3gd20::gyroRange::R2000DPS);
 }
 
@@ -34,7 +47,7 @@ constexpr float GRAVITY_STANDARD = GRAVITY_EARTH;
 constexpr float MG_LSB     = 0.001F * GRAVITY_EARTH;   // 1, 2, 4 or 12 mg per lsb
 
 vec3d imu::getAcceleration()const{
-	i2c_utils::v3 raw = i2c_utils::readV16(lsm303::AddressAccel, lsm303::AccelRegisters::OUT_X_L_A|0x80, false);
+	i2c_utils::v3 raw = i2c_utils::readV16(lsm303::AddressAccel, (byte)lsm303::AccelRegisters::OUT_X_L_A|0x80, false);
 	// WHY??? these three lines?
 	raw.x >>= 4;
 	raw.y >>= 4;
@@ -47,8 +60,8 @@ vec3d imu::getAcceleration()const{
 
 constexpr float DPS_TO_RADS = 0.017453293F;
 
-vec3D imu::getRotationRate()const{
-	vec3d resu = i2c_utils::readV16(l3gd20::AdressGyro, l3gd20::gyroRegisters::OUT_X_L | 0x80, false);
+vec3d imu::getRotationRate()const{
+	vec3d resu = i2c_utils::readV16(l3gd20::AdressGyro, (byte)l3gd20::gyroRegisters::OUT_X_L | 0x80, false);
 	/* Convert values to rad/s */
 	resu *= l3gd20::getSensitivity(gRange) * DPS_TO_RADS;
 	return resu;
@@ -56,36 +69,36 @@ vec3D imu::getRotationRate()const{
 
 constexpr float GAUSS_TO_MICROTESLA = 100.0f;
 
-vec3D imu::getMagneticField()const{
-	i2c_utils::v3 raw = i2c_utils::readV16(lsm303::AddressMag, lsm303::MagRegisters::OUT_X_H_M);
+vec3d imu::getMagneticField()const{
+	i2c_utils::v3 raw = i2c_utils::readV16(lsm303::AddressMag, (byte)lsm303::MagRegisters::OUT_X_H_M);
 	vec3d resu;
 	resu.x = (float)raw.x / Gauss_LSB_XY * GAUSS_TO_MICROTESLA;
 	resu.y = (float)raw.y / Gauss_LSB_XY * GAUSS_TO_MICROTESLA;
 	resu.z = (float)raw.z / Gauss_LSB_Z * GAUSS_TO_MICROTESLA;
+	return resu;
 }
 
 float imu::getPressure()const{
-	int32_t UT, UP, B3, B6, X1, p;
+	int32_t UT, UP,  B6, X1, p;
 	uint32_t B4, B7;
 	// in further release, make this as a parameter
-	uint8_t oversampling bmp085::mode::ULTRAHIGHRES; // maximum resolution
+	uint8_t oversampling= (uint8_t)bmp085::mode::ULTRAHIGHRES; // maximum resolution
 
-	i2c_utils::writeCommand(bmp085::pressRegister::CONTROL, bmp085::pressRegister::READTEMPCMD, bmp085::AddressPress);
-	UT = i2c_utils::readS16(bmp085::AddressPress, bmp085::pressRegister::TEMPDATA);
+	i2c_utils::writeCommand(bmp085::AddressPress, (byte)bmp085::pressRegister::CONTROL, (byte)bmp085::pressRegister::READTEMPCMD);
+	UT = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::TEMPDATA);
 
-	uint32_t raw;
-	i2c_utils::writeCommand(bmp085::AddressPress, bmp085::pressRegister::CONTROL, bmp085::pressRegister::READPRESSURECMD + (oversampling << 6));
-	if (oversampling == bmp085::mode::ULTRALOWPOWER)
+	i2c_utils::writeCommand(bmp085::AddressPress, (byte)bmp085::pressRegister::CONTROL, (byte)bmp085::pressRegister::READPRESSURECMD + (oversampling << 6));
+	if (oversampling == (uint8_t)bmp085::mode::ULTRALOWPOWER)
 		delay(5);
-	else if (oversampling == bmp085::mode::STANDARD)
+	else if (oversampling == (uint8_t)bmp085::mode::STANDARD)
 		delay(8);
-	else if (oversampling == bmp085::mode::HIGHRES)
+	else if (oversampling == (uint8_t)bmp085::mode::HIGHRES)
 		delay(14);
 	else
 		delay(26);
-	UP = i2c_utils::read16(bmp085::AddressPress, bmp085::pressRegister::PRESSUREDATA);
+	UP = i2c_utils::read16(bmp085::AddressPress, (byte)bmp085::pressRegister::PRESSUREDATA);
 	UP <<= 8;
-	UP |= i2c_utils::read8(bmp085::AddressPress, bmp085::pressRegister::PRESSUREDATA + 2);
+	UP |= i2c_utils::read8(bmp085::AddressPress, (byte)bmp085::pressRegister::PRESSUREDATA + 2);
 	UP >>= (8 - oversampling);
 
 	X1 = (UT - (int32_t)cal.ac6) * ((int32_t)cal.ac5) >> 15;
@@ -104,8 +117,8 @@ float imu::getAltitude()const{
 float imu::getTemperature()const{
 	int32_t UT, B5; // following ds convention
 	float temp;
-	i2c_utils::writeCommand(bmp085::AddressPress, bmp085::pressRegister::CONTROL, bmp085::pressRegister::READTEMPCMD);
-	UT = i2c_utils::readS16(bmp085::AddressPress, bmp085::pressRegister::TEMPDATA);
+	i2c_utils::writeCommand(bmp085::AddressPress, (byte)bmp085::pressRegister::CONTROL, (byte)bmp085::pressRegister::READTEMPCMD);
+	UT = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::TEMPDATA);
 	int32_t X1 = (UT - (int32_t)cal.ac6) * ((int32_t)cal.ac5) >> 15;
 	B5 = X1 + ((int32_t)cal.mc << 11) / (X1 + (int32_t)cal.md);
 	temp = (B5 + 8) >> 4;
@@ -122,21 +135,21 @@ void imu::setReferenceAltitude(const float currentAltitude){
 }
 
 void imu::getCalibrationData(){
-	cal.ac1 = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_AC1);
-	cal.ac2 = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_AC2);
-	cal.ac3 = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_AC3);
-	cal.ac4 = i2c_utils::read16(bmp085::AddressPress, bmp085::pressRegister::CAL_AC4);
-	cal.ac5 = i2c_utils::read16(bmp085::AddressPress, bmp085::pressRegister::CAL_AC5);
-	cal.ac6 = i2c_utils::read16(bmp085::AddressPress, bmp085::pressRegister::CAL_AC6);
-	cal.b1 = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_B1);
-	cal.b2 = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_B2);
-	cal.mb = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_MB);
-	cal.mc = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_MC);
-	cal.md = i2c_utils::read16S(bmp085::AddressPress, bmp085::pressRegister::CAL_MD);
+	cal.ac1 = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_AC1);
+	cal.ac2 = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_AC2);
+	cal.ac3 = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_AC3);
+	cal.ac4 = i2c_utils::read16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_AC4);
+	cal.ac5 = i2c_utils::read16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_AC5);
+	cal.ac6 = i2c_utils::read16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_AC6);
+	cal.b1 = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_B1);
+	cal.b2 = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_B2);
+	cal.mb = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_MB);
+	cal.mc = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_MC);
+	cal.md = i2c_utils::readS16(bmp085::AddressPress, (byte)bmp085::pressRegister::CAL_MD);
 }
 
 void imu::setMagGain(const lsm303::MagGain& gain) {
-	i2c_utils::writeCommand(lsm303::AddressMag, lsm303::MagRegisters::CRB_REG_M, (byte) gain);
+	i2c_utils::writeCommand(lsm303::AddressMag, (byte)lsm303::MagRegisters::CRB_REG_M, (byte)gain);
 	switch (gain) {
 		case lsm303::MagGain::G1_3:
 			Gauss_LSB_XY = 1100;
@@ -170,20 +183,20 @@ void imu::setMagGain(const lsm303::MagGain& gain) {
 }
 
 void imu::setMagRate(const lsm303::MagRate& rate){
-	i2c_utils::writeCommand(lsm303::AddressMag, lsm303::MagRegisters::CRA_REG_M, ((byte)rate & 0x07) << 2);
+	i2c_utils::writeCommand(lsm303::AddressMag, (byte)lsm303::MagRegisters::CRA_REG_M, ((byte)rate & 0x07) << 2);
 }
 
 void imu::setGyroRange(const l3gd20::gyroRange& range){
 	gRange = range;
 	switch (gRange) {
 		case l3gd20::gyroRange::R250DPS:
-			i2c_utils::writeCommand(l3gd20::AdressGyro, l3gd20::GyroRegisters::CTRL_REG4, 0x00);
+			i2c_utils::writeCommand(l3gd20::AdressGyro, (byte)l3gd20::gyroRegisters::CTRL_REG4, 0x00);
 			break;
 		case l3gd20::gyroRange::R500DPS:
-			i2c_utils::writeCommand(l3gd20::AdressGyro, l3gd20::GyroRegisters::CTRL_REG4, 0x10);
+			i2c_utils::writeCommand(l3gd20::AdressGyro, (byte)l3gd20::gyroRegisters::CTRL_REG4, 0x10);
 			break;
 		case l3gd20::gyroRange::R2000DPS:
-			i2c_utils::writeCommand(l3gd20::AdressGyro, l3gd20::GyroRegisters::CTRL_REG4, 0x20);
+			i2c_utils::writeCommand(l3gd20::AdressGyro, (byte)l3gd20::gyroRegisters::CTRL_REG4, 0x20);
 			break;
 	}
 }
