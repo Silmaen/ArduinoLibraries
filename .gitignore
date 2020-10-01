@@ -32,7 +32,9 @@
 *.app
 
 .idea
+Adafruit*
 Arduino_MKRENV
+Grove*
 HAMqttDevice
 Kalman_Filter_Library
 MQTT
@@ -41,6 +43,8 @@ RTClib
 SHT1x
 SdFat
 ShiftPWM-master
+Sodaq*
+SparkFun*
 TinyWireM
 WaveHC
 WiFiNINA
