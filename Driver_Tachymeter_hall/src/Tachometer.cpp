@@ -1,5 +1,5 @@
 /*
-  AJ-SR04M - Library for arduino, for Tachometer sensor.
+  Driver_AJ-SR04M - Library for arduino, for Tachometer sensor.
   Created by Silmaen, September 27, 2020.
 */
 

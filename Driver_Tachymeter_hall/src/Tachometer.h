@@ -1,5 +1,5 @@
 /*
-  AJ-SR04M - Library for arduino, for Tachometer sensor.
+  Driver_AJ-SR04M - Library for arduino, for Tachometer sensor.
   Created by Silmaen, September 27, 2020.
 */
 
@@ -63,8 +63,9 @@ class Tachometer {
      * \return the velocity is the desired unit
      */
     float getVelocity(const VelocityUnit& unit)const;
- private:
+
     int64_t getPeriod()const;
+ private:
     VelocityUnit _defaultUnit; ///< default unit system
     float _PulseLength;  ///< length og a pulse
     uint64_t _timeout;
