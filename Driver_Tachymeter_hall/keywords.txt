@@ -1,0 +1,7 @@
+Tachometer	KEYWORD1
+
+getFrequency	KEYWORD2
+getRpm	KEYWORD2
+getVelocity	KEYWORD2
+getVelocity	KEYWORD2
+getPeriod	KEYWORD2

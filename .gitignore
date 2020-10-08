@@ -30,6 +30,7 @@
 *.exe
 *.out
 *.app
+cmake-*
 
 .idea
 Adafruit*
@@ -42,6 +43,7 @@ Mirf
 RTClib
 SHT1x
 SdFat
+Servo
 ShiftPWM-master
 Sodaq*
 SparkFun*

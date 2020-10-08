@@ -1,5 +1,5 @@
 /*
-  AJ-SR04M - Library for arduino, for AJ-SR04M ultrasonic distance sensor.
+  Driver_AJ-SR04M - Library for arduino, for Driver_AJ-SR04M ultrasonic distance sensor.
   Created by Silmaen, September 25, 2020.
 */
 
