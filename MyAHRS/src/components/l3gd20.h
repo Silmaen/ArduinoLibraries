@@ -59,16 +59,4 @@ namespace l3gd20 {
 	constexpr float GyroSensitivity_500DPS  = 0.0175F;     // Roughly 45/256
 	constexpr float GyroSensitivity_2000DPS = 0.070F;      // Roughly 18/256
 
-	float getSensitivity(gyroRange r){
-		switch (r){
-			case gyroRange::R250DPS:
-				return GyroSensitivity_250DPS;
-			case gyroRange::R500DPS:
-				return GyroSensitivity_500DPS;
-			case gyroRange::R2000DPS:
-				return GyroSensitivity_2000DPS;
-		}
-		return0;
-	}
-
 }
