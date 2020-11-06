@@ -31,9 +31,6 @@ public:
 	// construct, init
 	imu10dof();
 
-	// calibration
-	void calibration();
-
 	// measure & store
 	const vec3f& measureAccel(){m_accel();return __acc;}
 	const vec3f& measureGyro(){m_gyro();return __gyro;}
@@ -44,7 +41,6 @@ public:
 
 	// getter
 	[[nodiscard]] const vec3f& getAccel()const noexcept{return __acc;};
-	[[nodiscard]] const vec3f& getAccelNoGravity()const noexcept{return __acc;};
 	[[nodiscard]] const vec3f& getGyro()const noexcept{return __gyro;};
 	[[nodiscard]] const vec3f& getMagneto()const noexcept{return __mag;};
 	[[nodiscard]] const float& getTemperature()const noexcept{return __temp;};
@@ -56,33 +52,37 @@ public:
 	void setAccelMode(lsm303::AccelMode mode);
 	void setAccelRange(lsm303::AccelRange range);
 	void setAccelResolution(lsm303::AccelResolution hiRes);
-	[[nodiscard]] const lsm303::AccelRate& getAccelRate() const {return __accelRate;}
-	[[nodiscard]] const lsm303::AccelMode& getAccelMode() const {return __accelMode;}
-	[[nodiscard]] const lsm303::AccelRange& getAccelRange() const {return __accelRange;}
-	[[nodiscard]] const lsm303::AccelResolution& getAccelResolution() const {return __accelResolution;}
+	[[nodiscard]] const lsm303::AccelRate& getAccelRate() const {return __accelSetting.accelRate;}
+	[[nodiscard]] const lsm303::AccelMode& getAccelMode() const {return __accelSetting.accelMode;}
+	[[nodiscard]] const lsm303::AccelRange& getAccelRange() const {return __accelSetting.accelRange;}
+	[[nodiscard]] const lsm303::AccelResolution& getAccelResolution() const {return __accelSetting.accelResolution;}
+	//   magnetometer
+	void setMagRate(lsm303::MagRate rate);
+	void setMagRange(lsm303::MagRange range);
+	[[nodiscard]] const lsm303::MagRate& getMagRate() const{return __magSetting.magRate;}
+	[[nodiscard]] const lsm303::MagRange& getMagGain() const{return __magSetting.magRange;}
+	//   gyroscope
+	//   barometer / thermometer
 
 private:
 
 	void m_accel();
+    void m_Magneto();
 	void m_gyro();
-	void m_Magneto();
 	void m_Temperature();
 	void m_Pressure();
 
 	// data
 	vec3f __acc;
+    vec3f __mag;
 	vec3f __gyro;
-	vec3f __mag;
 	float __temp;
 	float __pres;
 
-	//  settings
+	//  Settings
 	//    Accelerometer
-	lsm303::AccelRate __accelRate = lsm303::AccelRate::HZ_100;
-	lsm303::AccelMode __accelMode = lsm303::AccelMode::NORMAL;
-	lsm303::AccelRange __accelRange = lsm303::AccelRange::R_2G;
-	lsm303::AccelResolution __accelResolution = lsm303::AccelResolution::LOW_RES;
-	float __factor = 0.00980665F;
-
+	lsm303::AccelSetting __accelSetting;
+	//    Magnetometer
+	lsm303::MagSetting __magSetting;
 
 };

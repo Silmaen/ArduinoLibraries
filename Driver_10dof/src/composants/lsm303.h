@@ -49,23 +49,6 @@ namespace lsm303 {
 		TIME_WINDOW_A = 0x3D
 	};
 
-	enum struct MagRegisters{
-		CRA_REG_M = 0x00,
-		CRB_REG_M = 0x01,
-		MR_REG_M = 0x02,
-		OUT_X_H_M = 0x03,
-		OUT_X_L_M = 0x04,
-		OUT_Z_H_M = 0x05,
-		OUT_Z_L_M = 0x06,
-		OUT_Y_H_M = 0x07,
-		OUT_Y_L_M = 0x08,
-		SR_REG_Mg = 0x09,
-		IRA_REG_M = 0x0A,
-		IRB_REG_M = 0x0B,
-		IRC_REG_M = 0x0C,
-		TEMP_OUT_H_M = 0x31,
-		TEMP_OUT_L_M = 0x32
-	};
 /*=========================================================================*/
 
 	/**
@@ -143,10 +126,44 @@ namespace lsm303 {
 	 */
 	float getMSperBit(const AccelRange& range=AccelRange::R_2G);
 
+	/**
+	 * \brief structure gathering accelerometer settings
+	 */
+	struct AccelSetting{
+		AccelRate accelRate = lsm303::AccelRate::HZ_100; ///< Rate of sensor
+		AccelMode accelMode = lsm303::AccelMode::NORMAL; ///< Mode of the sensor
+		AccelRange accelRange = lsm303::AccelRange::R_2G; ///< Range of the sensor
+		AccelResolution accelResolution = lsm303::AccelResolution::LOW_RES; ///< Resolution of the sensor
+		float factor = 0.00980665F; ///< scaling factor from raw input to m/s/s
+	};
+
+
 /*=========================================================================
     MAGNETOMETER GAIN SETTINGS
 ---------------------------------------------------------------------------*/
-	enum struct MagGain {
+
+    enum MagRegisters{
+        CRA_REG_M = 0x00,
+        CRB_REG_M = 0x01,
+        MR_REG_M = 0x02,
+        OUT_X_H_M = 0x03,
+        OUT_X_L_M = 0x04,
+        OUT_Z_H_M = 0x05,
+        OUT_Z_L_M = 0x06,
+        OUT_Y_H_M = 0x07,
+        OUT_Y_L_M = 0x08,
+        SR_REG_Mg = 0x09,
+        IRA_REG_M = 0x0A,
+        IRB_REG_M = 0x0B,
+        IRC_REG_M = 0x0C,
+        TEMP_OUT_H_M = 0x31,
+        TEMP_OUT_L_M = 0x32
+    };
+
+    /**
+     * \brief list of possible range (large range means coarser resolution)
+     */
+	enum class MagRange {
 		G1_3 = 0x20,  ///< +/- 1.3
 		G1_9 = 0x40,  ///< +/- 1.9
 		G2_5 = 0x60,  ///< +/- 2.5
@@ -158,7 +175,10 @@ namespace lsm303 {
 /*=========================================================================
     MAGNETOMETER UPDATE RATE SETTINGS
 -----------------------------------------------------------------------*/
-	enum struct MagRate {
+    /**
+     * \brief the sensor rate of measure
+     */
+	enum class MagRate {
 		R0_7   = 0x00,  ///< 0.75 Hz
 		R1_5   = 0x01,  ///< 1.5 Hz
 		R3_0   = 0x62,  ///< 3.0 Hz
@@ -168,6 +188,26 @@ namespace lsm303 {
 		R75    = 0x06,  ///< 75 Hz
 		R220   = 0x07   ///< 200 Hz
 	};
+
+	/**
+	 * \brief get the value of gain for X and Y at the specific range
+	 * \param range the range
+	 * \return teh gain value
+	 */
+	float getXYGain(MagRange range);
+    /**
+     * \brief get the value of gain for Z at the specific range
+     * \param range the range
+     * \return teh gain value
+     */
+    float getZGain(MagRange range);
+
+    struct MagSetting{
+        MagRange magRange = lsm303::MagRange::G1_3; ///< Rate of sensor
+        MagRate magRate = lsm303::MagRate::R15; ///< Mode of the sensor
+        float factorXY = 1100F; ///< scaling factor from raw input to gauss for X and Y
+        float factorZ = 980F; ///< scaling factor from raw input to gauss for Z
+    };
 /*=========================================================================*/
 
 /*=========================================================================

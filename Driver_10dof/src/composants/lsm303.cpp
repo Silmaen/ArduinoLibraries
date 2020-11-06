@@ -36,4 +36,45 @@ namespace lsm303 {
 		return 9.80665F * getGperBit(range);
 	}
 
+
+    float getXYGain(MagRange range){
+        switch (range) {
+            case MagRange::G1_3:
+                return 1.f/1100.f;
+            case MagRange::G1_9:
+                return 1.f/855.f;
+            case MagRange::G2_5:
+                return 1.f/670.f;
+            case MagRange::G4_0:
+                return 1.f/450.f;
+            case MagRange::G4_7:
+                return 1.f/400.f;
+            case MagRange::G5_6:
+                return 1.f/330.f;
+            case MagRange::G8_1:
+                return 1.f/230.f;
+        }
+        return 0.f;
+	}
+
+    float getZGain(MagRange range){
+        switch (range) {
+            case MagRange::G1_3:
+                return 1.f/980.f;
+            case MagRange::G1_9:
+                return 1.f/760.f;
+            case MagRange::G2_5:
+                return 1.f/600.f;
+            case MagRange::G4_0:
+                return 1.f/400.f;
+            case MagRange::G4_7:
+                return 1.f/355.f;
+            case MagRange::G5_6:
+                return 1.f/295.f;
+            case MagRange::G8_1:
+                return 1.f/205.f;
+        }
+        return 0.f;
+	}
+
 }
