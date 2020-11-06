@@ -3,47 +3,28 @@
 //
 
 #pragma once
-#include "math3d.h"
-
-enum class lsm303AccelRange {
-	LSM303_RANGE_2G,  ///< Measurement range from +2G to -2G (19.61 m/s^2)
-	LSM303_RANGE_4G,  ///< Measurement range from +4G to -4G (39.22 m/s^2)
-	LSM303_RANGE_8G,  ///< Measurement range from +8G to -8G (78.45 m/s^2)
-	LSM303_RANGE_16G, ///< Measurement range from +16G to -16G (156.9 m/s^2)
-} ;
-
-enum class lsm303AccelMode {
-	LSM303_MODE_NORMAL,          ///< Normal measurement mode; 10-bit
-	LSM303_MODE_HIGH_RESOLUTION, ///< High resolution mode; 12-bit
-	LSM303_MODE_LOW_POWER,       ///< Low power mode; 8-bit
-} ;
-
-enum class lsm303MagGain{
-	LSM303_MAGGAIN_1_3, ///< +/- 1.3
-	LSM303_MAGGAIN_1_9, ///< +/- 1.9
-	LSM303_MAGGAIN_2_5, ///< +/- 2.5
-	LSM303_MAGGAIN_4_0, ///< +/- 4.0
-	LSM303_MAGGAIN_4_7, ///< +/- 4.7
-	LSM303_MAGGAIN_5_6, ///< +/- 5.6
-	LSM303_MAGGAIN_8_1  ///< +/- 8.1
-};
-
-enum class lsm303MagRate{
-	LSM303_MAGRATE_0_7, ///< 0.75 Hz
-	LSM303_MAGRATE_1_5, ///< 1.5 Hz
-	LSM303_MAGRATE_3_0, ///< 3.0 Hz
-	LSM303_MAGRATE_7_5, ///< 7.5 Hz
-	LSM303_MAGRATE_15,  ///< 15 Hz
-	LSM303_MAGRATE_30,  ///< 30 Hz
-	LSM303_MAGRATE_75,  ///< 75 Hz
-	LSM303_MAGRATE_220  ///< 220 Hz
-};
+#include "composants/math3d.h"
+#include "composants/lsm303.h"
 
 enum class l3gd20GyroSensitivity {
-    L3GD20_SENSITIVITY_250DPS,  ///< Sensitivity at 250 dps
-    L3GD20_SENSITIVITY_500DPS,  ///< Sensitivity at 500 dps
-    L3GD20_SENSITIVITY_2000DPS, ///< Sensitivity at 2000 dps
-} ;
+	L3GD20_SENSITIVITY_250DPS,  ///< Sensitivity at 250 dps
+	L3GD20_SENSITIVITY_500DPS,  ///< Sensitivity at 500 dps
+	L3GD20_SENSITIVITY_2000DPS, ///< Sensitivity at 2000 dps
+};
+
+struct bmp180Calibration {
+	int16_t ac1;
+	int16_t ac2;
+	int16_t ac3;
+	uint16_t ac4;
+	uint16_t ac5;
+	uint16_t ac6;
+	int16_t b1;
+	int16_t b2;
+	int16_t mb;
+	int16_t mc;
+	int16_t md;
+};
 
 class imu10dof {
 public:
@@ -55,7 +36,6 @@ public:
 
 	// measure & store
 	const vec3f& measureAccel(){m_accel();return __acc;}
-	vec3f measureAccelNoGravity(){m_gyro();return __acc-__calibrated;}
 	const vec3f& measureGyro(){m_gyro();return __gyro;}
 	const vec3f& measureMagneto(){m_Magneto();return __mag;}
 	const float& measureTemperature(){m_Temperature();return __temp;}
@@ -63,19 +43,23 @@ public:
 	void measureAll(){m_accel();m_gyro();m_Magneto();m_Temperature();m_Pressure();}
 
 	// getter
-	const vec3f& getAccel()const noexcept{return __acc;};
-	const vec3f& getAccelNoGravity()const noexcept{return __acc;};
-	const vec3f& getGyro()const noexcept{return __gyro;};
-	const vec3f& getMagneto()const noexcept{return __mag;};
-	const float& getTemperature()const noexcept{return __temp;};
-	const float& getPressure()const noexcept{return __pres;};
+	[[nodiscard]] const vec3f& getAccel()const noexcept{return __acc;};
+	[[nodiscard]] const vec3f& getAccelNoGravity()const noexcept{return __acc;};
+	[[nodiscard]] const vec3f& getGyro()const noexcept{return __gyro;};
+	[[nodiscard]] const vec3f& getMagneto()const noexcept{return __mag;};
+	[[nodiscard]] const float& getTemperature()const noexcept{return __temp;};
+	[[nodiscard]] const float& getPressure()const noexcept{return __pres;};
 
 	// settings
-	void setRange(lsm303AccelRange range);
-	void setMode(lsm303AccelMode mode);
-	void setMagGain(lsm303MagGain gain);
-	void setMagRate(lsm303MagRate rate);
-	void set
+	//   accelerometer
+	void setAccelRate(lsm303::AccelRate rate);
+	void setAccelMode(lsm303::AccelMode mode);
+	void setAccelRange(lsm303::AccelRange range);
+	void setAccelResolution(lsm303::AccelResolution hiRes);
+	[[nodiscard]] const lsm303::AccelRate& getAccelRate() const {return __accelRate;}
+	[[nodiscard]] const lsm303::AccelMode& getAccelMode() const {return __accelMode;}
+	[[nodiscard]] const lsm303::AccelRange& getAccelRange() const {return __accelRange;}
+	[[nodiscard]] const lsm303::AccelResolution& getAccelResolution() const {return __accelResolution;}
 
 private:
 
@@ -93,9 +77,12 @@ private:
 	float __pres;
 
 	//  settings
-	l3gd20GyroSensitivity g_sensitivity;
+	//    Accelerometer
+	lsm303::AccelRate __accelRate = lsm303::AccelRate::HZ_100;
+	lsm303::AccelMode __accelMode = lsm303::AccelMode::NORMAL;
+	lsm303::AccelRange __accelRange = lsm303::AccelRange::R_2G;
+	lsm303::AccelResolution __accelResolution = lsm303::AccelResolution::LOW_RES;
+	float __factor = 0.00980665F;
 
-	// calibration
-	bool __calibrated;
-	vec3f __gravity;
+
 };
