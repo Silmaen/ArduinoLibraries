@@ -1,12 +1,15 @@
 //
-// Created by damien.lachouette on 29/09/2020.
+// Created by Silmaen on 29/09/2020.
 //
+
+#include "i2c_utils.h"
 
 #include <Arduino.h>
 #include <Wire.h>
-#include "i2c_utils.h"
 
 namespace i2c_utils {
+
+    constexpr uint8_t byte_shift = 8U;
 
     /**
      * \brief write one bytes at the given register in the given device
@@ -14,11 +17,11 @@ namespace i2c_utils {
      * \param reg the register to read
      * \param value the value to write
      */
-    void writeCommand(const uint8_t address, const byte reg,const byte value){
+    void writeCommand(const uint8_t address, const byte reg, const byte value) {
         Wire.beginTransmission(address);
 #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
-		Wire.write((uint8_t)value);
+        Wire.write(static_cast<uint8_t>(reg));
+        Wire.write(static_cast<uint8_t>(value));
 #else
         Wire.send(reg);
         Wire.send(value);
@@ -32,20 +35,19 @@ namespace i2c_utils {
      * \param reg the register to read
      * \return the content of the byte
      */
-    uint8_t read8(const uint8_t address, const byte reg){
-        uint8_t value;
+    [[nodiscard]] uint8_t read8(const uint8_t address, const byte reg) {
         Wire.beginTransmission(address);
 #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
+        Wire.write(static_cast<uint8_t>(reg));
 #else
         Wire.send(reg);
 #endif
         Wire.endTransmission();
-        Wire.requestFrom(address, (byte)1);
+        Wire.requestFrom(address, static_cast<byte>(1));
 #if ARDUINO >= 100
-        value = Wire.read();
+        uint8_t value = Wire.read();
 #else
-        value = Wire.receive();
+        uint8_t value = Wire.receive();
 #endif
         Wire.endTransmission();
         return value;
@@ -57,20 +59,20 @@ namespace i2c_utils {
      * \param reg the register to read
      * \return the value as unsigned integer
      */
-    uint16_t read16(const uint8_t address, const byte reg){
-        uint16_t value;
+    [[nodiscard]] uint16_t read16(const uint8_t address, const byte reg) {
         Wire.beginTransmission(address);
 #if ARDUINO >= 100
-        Wire.write((uint8_t)reg);
+        Wire.write(static_cast<uint8_t>(reg));
 #else
         Wire.send(reg);
 #endif
         Wire.endTransmission();
-        Wire.requestFrom(address, (byte)2);
+        Wire.requestFrom(address, static_cast<byte>(2));
 #if ARDUINO >= 100
-        value = (uint8_t)((uint8_t)Wire.read() << 8u) | (uint8_t)Wire.read();
+        uint16_t value =
+          static_cast<uint8_t>(static_cast<uint8_t>(Wire.read()) << byte_shift) | static_cast<uint8_t>(Wire.read());
 #else
-        value = (Wire.receive() << 8) | Wire.receive();
+        uint16_t value = (Wire.receive() << 8U) | Wire.receive();
 #endif
         Wire.endTransmission();
         return value;
@@ -82,8 +84,8 @@ namespace i2c_utils {
      * \param reg the register to read
      * \return the value as signed integer
      */
-    int16_t readS16(const uint8_t address, const byte reg){
-        return (int16_t)i2c_utils::read16(address, reg);
+    [[nodiscard]] int16_t readS16(const uint8_t address, const byte reg) {
+        return static_cast<int16_t>(i2c_utils::read16(address, reg));
     }
 
     /**
@@ -93,41 +95,57 @@ namespace i2c_utils {
      * \param highFirst if true the highest byte is get first
      * \return the vector
      */
-	vec3s16 readV16(const uint8_t address, const byte reg,const bool highFirst) {
+    [[nodiscard]] vec3s16 readV16(const uint8_t address, const byte reg, const bool highFirst) {
         Wire.beginTransmission(address);
 #if ARDUINO >= 100
         Wire.write(reg);
 #else
         Wire.send(reg);
 #endif
+        constexpr uint8_t nb_byte_in_vector = 6;
         Wire.endTransmission();
-        Wire.requestFrom(address, (byte)6);
+        Wire.requestFrom(address, nb_byte_in_vector);
         // Wait around until enough data is available
-        while (Wire.available() < 6);
-        uint8_t xhi, xlo, yhi, ylo, zhi, zlo;
+        while (Wire.available() < nb_byte_in_vector) {}
         if (highFirst) {
 #if ARDUINO >= 100
-            xhi = Wire.read(); xlo = Wire.read();
-			yhi = Wire.read(); ylo = Wire.read();
-			zhi = Wire.read(); zlo = Wire.read();
+            uint8_t xhi = Wire.read();
+            uint8_t xlo = Wire.read();
+            uint8_t yhi = Wire.read();
+            uint8_t ylo = Wire.read();
+            uint8_t zhi = Wire.read();
+            uint8_t zlo = Wire.read();
 #else
-            xhi = Wire.receive(); xlo = Wire.receive();
-            yhi = Wire.receive(); ylo = Wire.receive();
-            zhi = Wire.receive(); zlo = Wire.receive();
+            uint8_t xhi = Wire.receive();
+            uint8_t xlo = Wire.receive();
+            uint8_t yhi = Wire.receive();
+            uint8_t ylo = Wire.receive();
+            uint8_t zhi = Wire.receive();
+            uint8_t zlo = Wire.receive();
 #endif
-        } else {
-#if ARDUINO >= 100
-            xlo = Wire.read(); xhi = Wire.read();
-			ylo = Wire.read(); yhi = Wire.read();
-			zlo = Wire.read(); zhi = Wire.read();
-#else
-            xlo = Wire.receive(); xhi = Wire.receive();
-            ylo = Wire.receive(); yhi = Wire.receive();
-            zlo = Wire.receive(); zhi = Wire.receive();
-#endif
+            // Shift values to create properly formed integer
+            return vec3s16{static_cast<int16_t>(xlo | static_cast<uint16_t>(xhi << byte_shift)),
+                           static_cast<int16_t>(ylo | static_cast<uint16_t>(yhi << byte_shift)),
+                           static_cast<int16_t>(zlo | static_cast<uint16_t>(zhi << byte_shift))};
         }
+#if ARDUINO >= 100
+        uint8_t xlo = Wire.read();
+        uint8_t xhi = Wire.read();
+        uint8_t ylo = Wire.read();
+        uint8_t yhi = Wire.read();
+        uint8_t zlo = Wire.read();
+        uint8_t zhi = Wire.read();
+#else
+        uint8_t xlo = Wire.receive();
+        uint8_t xhi = Wire.receive();
+        uint8_t ylo = Wire.receive();
+        uint8_t yhi = Wire.receive();
+        uint8_t zlo = Wire.receive();
+        uint8_t zhi = Wire.receive();
+#endif
         // Shift values to create properly formed integer
-        return vec3s16{(int16_t)(xlo | (xhi << 8)), (int16_t)(ylo | (yhi << 8)), (int16_t)(zlo | (zhi << 8))};
+        return vec3s16{static_cast<int16_t>(xlo | static_cast<uint16_t>(xhi << byte_shift)),
+                       static_cast<int16_t>(ylo | static_cast<uint16_t>(yhi << byte_shift)),
+                       static_cast<int16_t>(zlo | static_cast<uint16_t>(zhi << byte_shift))};
     }
-}
-
+} // namespace i2c_utils
