@@ -389,7 +389,19 @@ namespace lsm303 {
          */
         [[nodiscard]] const Range &getGain() const { return setting.range; }
 
-        /*=========================================================================*/
+        /**
+         * \brief measure the temperature of the device
+         * \return the measured temperature (the absolute 0 if not available)
+         */
+        [[nodiscard]] float getTemperature() override {
+            constexpr uint16_t signbit12 = 0x0800; // Ob0000 1000 0000 0000;
+            constexpr float    degPerLSB = 1.0F / 8.0F;
+            uint16_t           raw       = read16(TEMP_OUT_H_M) >> 4U;
+            bool               neg       = (raw & signbit12) != 0;
+            raw &= ~signbit12;
+            return (neg ? -1.0F : 1.0F) * raw * degPerLSB;
+        }
+
     private:
         float factorXY = factor_1_3_XY; ///< scaling factor from raw input to gauss for X and Y
         float factorZ  = factor_1_3_Z;  ///< scaling factor from raw input to gauss for Z
