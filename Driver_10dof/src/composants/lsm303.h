@@ -103,13 +103,21 @@ namespace lsm303 {
         /**
          * \brief default constructor
          */
-        Accel() { applySettings(); }
+        Accel() = default;
 
         /**
          * \brief construct with initial settings
          * \param settings the initial settings to apply
          */
-        explicit Accel(const Setting &settings) : setting{settings} { applySettings(); }
+        explicit Accel(const Setting &settings) : setting{settings} {}
+
+        /**
+         * @brief setup device
+         */
+        void begin() override {
+            i2c::device<accelerometer_address, vec3f>::begin();
+            applySettings();
+        }
 
         /**
          * \brief define the rate of measure of the device
