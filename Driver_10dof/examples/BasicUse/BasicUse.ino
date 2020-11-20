@@ -4,34 +4,43 @@
 constexpr uint16_t bufsize = 1000;
 
 imu10dof myDevice;
-
-struct accInfo {
-    uint64_t timestamp;
-    vec3f accel;
-};
-
-accInfo  buffer[bufsize];
-uint16_t iterator = 0;
+imu10dof::measure_data data;
 
 void setup() {
     Serial.begin(115200);
-    while(!Serial.available());
+    while(!Serial);
+    Serial.println("System is starting.");
+    if (!myDevice.begin()){
+        Serial.println("Problem during initializing");
+        myDevice.checks();
+        while(1);
+    }
     Serial.println("System in ready.");
 }
 
 void loop() {
-    iterator = 0;
-    Serial.println("Measuring...");
-    uint64_t starttime = micros();
-    while(iterator<bufsize) {
-        buffer[iterator].timestamp = micros();
-        buffer[iterator].accel     = myDevice.measureAccel();
-        ++iterator;
-    }
-    uint64_t stroptime = micros();
-    Serial.print("End measure: ");
-    Serial.print((stroptime-starttime)/1e6);
-    Serial.println("s of measure.");
-    Serial.println("Waiting 10seconds.");
-    delay(10000); //
+    data = myDevice.measureAll();
+    Serial.print("ax: ");
+    Serial.print(data.accel.x());
+    Serial.print(" ay: ");
+    Serial.print(data.accel.y());
+    Serial.print(" az: ");
+    Serial.print(data.accel.z());
+    Serial.print(" gx: ");
+    Serial.print(data.gyro.x());
+    Serial.print(" gy: ");
+    Serial.print(data.gyro.y());
+    Serial.print(" gz: ");
+    Serial.print(data.gyro.z());
+    Serial.print(" mx: ");
+    Serial.print(data.magento.x());
+    Serial.print(" my: ");
+    Serial.print(data.magento.y());
+    Serial.print(" mz: ");
+    Serial.print(data.magento.z());
+    Serial.print(" P: ");
+    Serial.print(data.pressure);
+    Serial.print(" T: ");
+    Serial.println(data.temperature);
+    delay(500);
 }

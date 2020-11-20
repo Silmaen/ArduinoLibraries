@@ -22,26 +22,26 @@ namespace lsm303 {
     constexpr uint8_t mask_5_6          = 0b11001111U;
 
     // conversion factors
-    //   Accel
+    //   Accel (final result in m/s/s )
     constexpr static float factor_2g  = 0.00980665;
     constexpr static float factor_4g  = 0.0196133;
     constexpr static float factor_8g  = 0.0392266;
     constexpr static float factor_16g = 0.1176798;
-    //   Mag
-    constexpr static float factor_1_3_XY = 1.F / 1100.F;
-    constexpr static float factor_1_9_XY = 1.F / 855.F;
-    constexpr static float factor_2_5_XY = 1.F / 670.F;
-    constexpr static float factor_4_0_XY = 1.F / 450.F;
-    constexpr static float factor_4_7_XY = 1.F / 400.F;
-    constexpr static float factor_5_6_XY = 1.F / 330.F;
-    constexpr static float factor_8_1_XY = 1.F / 230.F;
-    constexpr static float factor_1_3_Z  = 1.F / 980.F;
-    constexpr static float factor_1_9_Z  = 1.F / 760.F;
-    constexpr static float factor_2_5_Z  = 1.F / 600.F;
-    constexpr static float factor_4_0_Z  = 1.F / 400.F;
-    constexpr static float factor_4_7_Z  = 1.F / 355.F;
-    constexpr static float factor_5_6_Z  = 1.F / 295.F;
-    constexpr static float factor_8_1_Z  = 1.F / 205.F;
+    //   Mag (final result in µT micro tesla)
+    constexpr static float factor_1_3_XY = 100.F / 1100.F;
+    constexpr static float factor_1_9_XY = 100.F / 855.F;
+    constexpr static float factor_2_5_XY = 100.F / 670.F;
+    constexpr static float factor_4_0_XY = 100.F / 450.F;
+    constexpr static float factor_4_7_XY = 100.F / 400.F;
+    constexpr static float factor_5_6_XY = 100.F / 330.F;
+    constexpr static float factor_8_1_XY = 100.F / 230.F;
+    constexpr static float factor_1_3_Z  = 100.F / 980.F;
+    constexpr static float factor_1_9_Z  = 100.F / 760.F;
+    constexpr static float factor_2_5_Z  = 100.F / 600.F;
+    constexpr static float factor_4_0_Z  = 100.F / 400.F;
+    constexpr static float factor_4_7_Z  = 100.F / 355.F;
+    constexpr static float factor_5_6_Z  = 100.F / 295.F;
+    constexpr static float factor_8_1_Z  = 100.F / 205.F;
 
     /**
      * \brief class to handle accelerometer
@@ -79,7 +79,7 @@ namespace lsm303 {
             R_2G  = 0b00, ///< +/- 2g
             R_4G  = 0b01, ///< +/- 4g
             R_8G  = 0b10, ///< +/- 8g
-            R_16G = 0b11, ///< +/- 4g
+            R_16G = 0b11, ///< +/- 16g
         };
 
         /**
@@ -113,10 +113,14 @@ namespace lsm303 {
 
         /**
          * @brief setup device
+         * @return true if success
          */
-        void begin() override {
-            i2c::device<accelerometer_address, vec3f>::begin();
+        bool begin() override {
+            if (! i2c::device<accelerometer_address, vec3f>::begin() )
+                return false;
+            // there is no whoami function so, we check one register
             applySettings();
+            return is_present;
         }
 
         /**
@@ -207,7 +211,95 @@ namespace lsm303 {
          */
         [[nodiscard]] const Resolution &getResolution() const { return setting.resolution; }
 
+        void print_config() override{
+            Serial.println("chipset LSM303 Accel");
+            Serial.print("factor    : ");Serial.println(factor, 8);
+            Serial.print("range     : ");
+            switch(setting.range){
+            case Range::R_2G:
+                Serial.println("2g");
+                break;
+            case Range::R_4G:
+                Serial.println("4g");
+                break;
+            case Range::R_8G:
+                Serial.println("8g");
+                break;
+            case Range::R_16G:
+                Serial.println("16g");
+                break;
+            }
+            Serial.print("mode      : ");
+            switch(setting.mode) {
+            case Mode::OFF:
+                Serial.println("off");
+                break;
+            case Mode::LOW_POWER:
+                Serial.println("low powere");
+                break;
+            case Mode::NORMAL:
+                Serial.println("normal");
+                break;
+            }
+            Serial.print("rate      : ");
+            switch(setting.rate){
+            case Rate::HZ_1:
+                Serial.println("1hz");
+                break;
+            case Rate::HZ_10:
+                Serial.println("10hz");
+                break;
+            case Rate::HZ_25:
+                Serial.println("25hz");
+                break;
+            case Rate::HZ_50:
+                Serial.println("50hz");
+                break;
+            case Rate::HZ_100:
+                Serial.println("100hz");
+                break;
+            case Rate::HZ_200:
+                Serial.println("200hz");
+                break;
+            case Rate::HZ_400:
+                Serial.println("400hz");
+                break;
+            case Rate::HZ_LP1620:
+                Serial.println(" low power 1620hz");
+                break;
+            case Rate::HZ_ULTRA:
+                Serial.println(" ultra");
+                break;
+            }
+            Serial.print("resolution: ");
+            switch(setting.resolution){
+            case Resolution::LOW_RES:
+                Serial.println(" low res");
+                break;
+            case Resolution::HIGH_RES:
+                Serial.println(" high res");
+                break;
+            }
+        }
     private:
+
+        /**
+         * @brief check the presence of the device
+         * @return return true if the device is found
+         *
+         * WARNING: as the LSM303DLHC has no WHOAMI, we overrides the REG1 register
+         * this function should be called BEFORE applying settings
+         */
+        bool is_device_present() override {
+            writeCommand(Registers::CTRL_REG1_A, 0x57);
+            // LSM303DLHC has no WHOAMI register so read CTRL_REG1_A back to check
+            // if we are connected or not
+            uint8_t reg1_a = read8(Registers::CTRL_REG1_A);
+            if (reg1_a != 0x57)
+                return false;
+            return true;
+        }
+
         /**
          * \brief transmit all settings to the device
          */
@@ -237,13 +329,17 @@ namespace lsm303 {
          * \brief read in the device for the acceleration data
          */
         void m_Measure() override {
-            uint8_t status_reg_A = read8(STATUS_REG_A);
-            if (status_reg_A == 0) // nothing has changed
+            if (! is_present)
                 return;
-            vec3s16 raw = readV16(OUT_X_L_A);
-            _dta.x()    = static_cast<float>(raw.x()) * factor;
-            _dta.y()    = static_cast<float>(raw.y()) * factor;
-            _dta.z()    = static_cast<float>(raw.z()) * factor;
+            uint8_t status_reg_A = read8(STATUS_REG_A);
+            if (status_reg_A == 0) { // nothing has changed
+                Serial.println("No Accel Data");
+                return;
+            }
+            vec3s16 raw = readV16(OUT_X_L_A  | 0x80,true);
+            _dta.x()    = static_cast<float>(raw.x() >> 4) * factor;
+            _dta.y()    = static_cast<float>(raw.y() >> 4) * factor;
+            _dta.z()    = static_cast<float>(raw.z() >> 4) * factor;
         }
 
         /**
@@ -269,7 +365,7 @@ namespace lsm303 {
             CTRL_REG4_A     = 0x23, // 00000000   rw
             CTRL_REG5_A     = 0x24, // 00000000   rw
             CTRL_REG6_A     = 0x25, // 00000000   rw
-            REFERENCE_A     = 0x26, // 00000000   r
+            REFERENCE_A     = 0x26, // 00000000   rw
             STATUS_REG_A    = 0x27, // 00000000   r
             OUT_X_L_A       = 0x28,
             OUT_X_H_A       = 0x29,
@@ -345,20 +441,28 @@ namespace lsm303 {
         /**
          * \brief default constructor
          */
-        Mag() {
-            // Magnetometer
-            writeCommand(Registers::MR_REG_M, 0x00U);
-        }
+        Mag() = default;
 
         /**
          * \brief constructor based on settings
          * \param settings the initialization settings
          */
-        explicit Mag(const Setting &settings) : setting{settings} {
-            // Magnetometer
+        explicit Mag(const Setting &settings) : setting{settings} {}
+
+        /**
+         * @brief setup device
+         * @return true if success
+         */
+        bool begin() override {
+            i2c::device<magnetometer_address, vec3f>::begin();
             writeCommand(Registers::MR_REG_M, 0x00U);
-            setRange(setting.range);
-            setRate(setting.rate);
+            is_present = is_device_present();
+            if (is_present) {
+                setRange(setting.range);
+                setRate(setting.rate);
+            }
+
+            return is_present;
         }
 
         /**
@@ -401,7 +505,7 @@ namespace lsm303 {
          * \brief measure the temperature of the device
          * \return the measured temperature (the absolute 0 if not available)
          */
-        [[nodiscard]] float getTemperature() override {
+        [[nodiscard]] float getTemperature()const override {
             constexpr uint16_t signbit12 = 0x0800; // Ob0000 1000 0000 0000;
             constexpr float    degPerLSB = 1.0F / 8.0F;
             uint16_t           raw       = read16(TEMP_OUT_H_M) >> 4U;
@@ -410,6 +514,62 @@ namespace lsm303 {
             return (neg ? -1.0F : 1.0F) * raw * degPerLSB;
         }
 
+        void print_config() override{
+            Serial.println("chipset LSM303 Mag");
+            Serial.print("Factor XY : "); Serial.println(factorXY, 8);
+            Serial.print("Factor Z  : "); Serial.println(factorZ, 8);
+            Serial.print("Rate      : ");
+            switch(setting.rate){
+            case Rate::R0_7:
+                Serial.println("0.75 Hz");
+                break;
+            case Rate::R1_5:
+                Serial.println("1.5 Hz");
+                break;
+            case Rate::R3_0:
+                Serial.println("3 Hz");
+                break;
+            case Rate::R7_5:
+                Serial.println("7.5 Hz");
+                break;
+            case Rate::R15:
+                Serial.println("15 Hz");
+                break;
+            case Rate::R30:
+                Serial.println("30 Hz");
+                break;
+            case Rate::R75:
+                Serial.println("75 Hz");
+                break;
+            case Rate::R220:
+                Serial.println("220 Hz");
+                break;
+            }
+            Serial.print("Range     : ");
+            switch(setting.range){
+            case Range::G1_3:
+                Serial.println("+/- 1.3");
+                break;
+            case Range::G1_9:
+                Serial.println("+/- 1.9");
+                break;
+            case Range::G2_5:
+                Serial.println("+/- 2.5");
+                break;
+            case Range::G4_0:
+                Serial.println("+/- 4");
+                break;
+            case Range::G4_7:
+                Serial.println("+/- 4.7");
+                break;
+            case Range::G5_6:
+                Serial.println("+/- 5.6");
+                break;
+            case Range::G8_1:
+                Serial.println("+/- 8.1");
+                break;
+            }
+        }
     private:
         float factorXY = factor_1_3_XY; ///< scaling factor from raw input to gauss for X and Y
         float factorZ  = factor_1_3_Z;  ///< scaling factor from raw input to gauss for Z
@@ -435,6 +595,23 @@ namespace lsm303 {
             TEMP_OUT_H_M = 0x31,
             TEMP_OUT_L_M = 0x32
         };
+
+        /**
+         * @brief check the presence of the device
+         * @return return true if the device is found
+         *
+         * WARNING: as the LSM303DLHC has no WHOAMI, we overrides the REG1 register
+         * this function should be called BEFORE applying settings
+         */
+        bool is_device_present() override {
+            writeCommand(Registers::MR_REG_M, 0x00U);
+            // LSM303DLHC has no WHOAMI register so read CRA_REG_M to check
+            // the default value (0b00010000/0x10)
+            uint8_t reg1_a = read8(Registers::CRA_REG_M);
+            if (reg1_a != 0x10)
+                return false;
+            return true;
+        }
 
         /**
          * \brief get the value of gain for X and Y at the specific range
@@ -475,13 +652,20 @@ namespace lsm303 {
          * \brief read in the device for the magnetic data
          */
         void m_Measure() override {
-            uint8_t status_reg_A = read8(SR_REG_Mg);
-            if (status_reg_A == 0) // nothing has changed
+            if (! is_present) {
+                Serial.println("No mag Device");
                 return;
-            vec3s16 raw = readV16(OUT_X_H_M, true);
+            }
+            uint8_t status_reg_A = read8(SR_REG_Mg);
+            if (status_reg_A == 0) { // nothing has changed
+                Serial.println("No mag Data");
+                return;
+            }
+            vec3s16 raw = readV16(OUT_X_H_M );
+            // WARNING: th Y and Z axis are inverted (see the registers)
             _dta.x()    = static_cast<float>(raw.x()) * factorXY;
-            _dta.y()    = static_cast<float>(raw.y()) * factorXY;
-            _dta.z()    = static_cast<float>(raw.z()) * factorZ;
+            _dta.y()    = static_cast<float>(raw.z()) * factorXY;
+            _dta.z()    = static_cast<float>(raw.y()) * factorZ;
         }
     };
 } // namespace lsm303

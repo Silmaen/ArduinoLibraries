@@ -62,27 +62,26 @@ namespace bmp085 {
         /**
          * \brief default constructor
          */
-        Baro() {
-            if (read8(CHIPID) != chip_id)
-                return;
-            readCalibration();
-        }
+        Baro() = default;
 
         /**
          * \brief constructor based on settings
          * \param settings the initialization settings
          */
-        explicit Baro(const Setting &settings) : setting{settings} {
-            if (read8(CHIPID) != chip_id)
-                return;
+        explicit Baro(const Setting &settings) : setting{settings} {}
+
+        bool begin() override {
+            if (!i2c::device<barometer_address, float>::begin())
+                return false;
             readCalibration();
+            return true;
         }
 
         /**
          * \brief measure the temperature of the device
          * \return the measured temperature (the absolute 0 if not available)
          */
-        [[nodiscard]] float getTemperature() override { return ((computeB5() + 8U) >> shift4) * degPerLsb; }
+        [[nodiscard]] float getTemperature() const override { return ((computeB5() + 8) >> shift4) * degPerLsb; }
 
         /**
          * \brief defines the mode of the sensor
@@ -96,12 +95,23 @@ namespace bmp085 {
          */
         [[nodiscard]] const Mode &getMode() const { return setting.mode; }
 
+        void print_config() override {
+            Serial.println("chipset BMP085");
+            Serial.print("Mode : ");
+            switch (setting.mode) {
+            case Mode::STANDARD: Serial.println("Standard"); break;
+            case Mode::ULTRALOWPOWER: Serial.println("Ultra Low Power"); break;
+            case Mode::HIGHRES: Serial.println("Hi-res"); break;
+            case Mode::ULTRAHIGHRES: Serial.println("Ultra Hi-res"); break;
+            }
+        }
+
     private:
         Setting setting; ///< settings of the device
         /**
          * \brief device registers
          */
-        enum Register {
+        enum Registers {
             CAL_AC1         = 0xAA, // R   Calibration data (16 bits)
             CAL_AC2         = 0xAC, // R   Calibration data (16 bits)
             CAL_AC3         = 0xAE, // R   Calibration data (16 bits)
@@ -123,45 +133,63 @@ namespace bmp085 {
             READPRESSURECMD = 0x34
         };
 
+        /**
+         * @brief check the presence of the device
+         * @return return true if the device is found
+         */
+        bool is_device_present() override {
+            uint8_t id = read8(Registers::CHIPID);
+            is_present = false;
+            if (id == 0x55) {
+                is_present = true;
+            }
+            return is_present;
+        }
+
+        /**
+         * \brief read the device for measure data
+         */
         void m_Measure() override {
+            if (!is_present) {
+                Serial.println("No Baro device");
+                return;
+            }
             constexpr int32_t  magic_number1 = 4000;
             constexpr int32_t  magic_number2 = 32768;
             constexpr uint32_t magic_number3 = 50000;
             constexpr uint32_t magic_number4 = 0x80000000;
             constexpr int32_t  magic_number5 = 3038;
             constexpr int32_t  magic_number6 = -7357;
-            constexpr int32_t  magic_number7 = -3791;
+            constexpr int32_t  magic_number7 = 3791;
 
-            int32_t b6 = computeB5() - magic_number1;
-            int32_t x1 = static_cast<uint32_t>(cal.b2 * static_cast<uint32_t>(b6 * b6) >> shift12) >> shift11;
-            int32_t x2 = static_cast<uint32_t>(cal.ac2 * b6) >> shift11;
-            int32_t x3 = x1 + x2;
-            int32_t b3 =
-              static_cast<uint32_t>(
-                (static_cast<uint32_t>((static_cast<uint16_t>(cal.ac1) << 2U) + x3) << static_cast<uint8_t>(setting.mode)) + 2) >>
-              2U;
-            x1          = static_cast<uint32_t>(cal.ac3 * b6) >> shift13;
-            x2          = static_cast<uint32_t>(cal.b1 * (static_cast<uint32_t>(b6 * b6) >> shift12)) >> double_byte_shift;
-            x3          = static_cast<uint32_t>((x1 + x2) + 2) >> 2U;
-            uint32_t b4 = cal.ac4 * static_cast<uint32_t>(x3 + magic_number2) >> shift15;
-            uint32_t b7 = (readUncompensatedPressure() - b3) * (magic_number3 >> static_cast<uint8_t>(setting.mode));
-            int32_t  p  = 0;
+            int32_t b6  = computeB5() - magic_number1;
+            int32_t x1  = (cal.b2 * ((b6 * b6) >> shift12)) >> shift11;
+            int32_t x2  = (cal.ac2 * b6) >> shift11;
+            int32_t x3  = x1 + x2;
+            int32_t b3  = (((static_cast<int32_t>(cal.ac1) * 4 + x3) << static_cast<uint32_t>(setting.mode)) + 2) >> 2U;
+            x1          = (cal.ac3 * b6) >> shift13;
+            x2          = (cal.b1 * ((b6 * b6) >> shift12)) >> double_byte_shift;
+            x3          = ((x1 + x2) + 2) >> 2U;
+            uint32_t b4 = (cal.ac4 * static_cast<uint32_t>(x3 + magic_number2)) >> shift15;
+            uint32_t b7 =
+              static_cast<uint32_t>(readUncompensatedPressure() - b3) * (magic_number3 >> static_cast<uint32_t>(setting.mode));
+            int32_t p = 0;
             if (b7 < magic_number4) {
-                p = (b7 * 2) / b4;
+                p = (b7 << 1) / b4;
             } else {
-                p = (b7 / b4) * 2;
+                p = (b7 / b4) << 1;
             }
-            x1   = (static_cast<uint32_t>(p) >> byte_shift) * (static_cast<uint32_t>(p) >> byte_shift);
-            x1   = static_cast<uint32_t>(x1 - magic_number5) >> double_byte_shift;
-            x2   = static_cast<uint32_t>(magic_number6 * p) >> double_byte_shift;
-            _dta = (p + (static_cast<uint32_t>(x1 + x2 + magic_number7) >> shift4)) * HPafromPa;
+            x1   = (p >> byte_shift) * (p >> byte_shift);
+            x1   = (x1 * magic_number5) >> double_byte_shift;
+            x2   = (magic_number6 * p) >> double_byte_shift;
+            _dta = (p + ((x1 + x2 + magic_number7) >> shift4)) * HPafromPa;
         }
 
         /**
          * \brief raw read of temperature
          * \return
          */
-        [[nodiscard]] int16_t readUncompensatedTemperature() {
+        [[nodiscard]] int16_t readUncompensatedTemperature() const noexcept {
             writeCommand(CONTROL, READTEMPCMD);
             delayMicroseconds(delay_temp);
             return readS16(TEMPDATA);
@@ -171,7 +199,7 @@ namespace bmp085 {
          * \brief raw read of temperature
          * \return
          */
-        [[nodiscard]] uint32_t readUncompensatedPressure() {
+        [[nodiscard]] uint32_t readUncompensatedPressure() const noexcept {
             constexpr uint8_t shift6 = 6U;
 
             writeCommand(CONTROL, READPRESSURECMD + (static_cast<uint8_t>(setting.mode) << shift6));
@@ -181,16 +209,16 @@ namespace bmp085 {
             case Mode::HIGHRES: delayMicroseconds(delayHiR); break;
             case Mode::ULTRAHIGHRES: delayMicroseconds(delayUHR); break;
             }
-            return read24(TEMPDATA) >> static_cast<uint8_t>(byte_shift - static_cast<uint8_t>(setting.mode));
+            return read24(PRESSUREDATA) >> static_cast<uint32_t>(byte_shift - static_cast<uint8_t>(setting.mode));
         }
 
         /**
          * \brief compute the 'B5' value based on raw temperature
          * \return the B5 value
          */
-        [[nodiscard]] int16_t computeB5() {
-            int16_t X1 = (readUncompensatedTemperature() - cal.ac6) * cal.ac5 >> shift15;
-            int16_t X2 = (static_cast<uint16_t>(cal.mc) << shift11) / (X1 + cal.md);
+        [[nodiscard]] int32_t computeB5() const noexcept {
+            int32_t X1 = (static_cast<int32_t>(readUncompensatedTemperature() - cal.ac6) * cal.ac5) >> shift15;
+            int32_t X2 = (static_cast<int32_t>(cal.mc) << shift11) / (X1 + cal.md);
             return X2 + X1;
         }
 

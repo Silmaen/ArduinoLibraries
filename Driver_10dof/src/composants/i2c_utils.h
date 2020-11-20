@@ -27,12 +27,14 @@ namespace i2c {
          */
         device() = default;
 
-        virtual /**
-                 * @brief starts the communication
-                 */
-          void
-          begin() {
+        /**
+         * @brief setup device
+         * @return true if success
+         */
+        virtual bool begin() {
             Wire.begin();
+            is_present = is_device_present();
+            return is_present;
         }
 
         /**
@@ -50,15 +52,29 @@ namespace i2c {
             return _dta;
         }
 
+        const bool& get_presence(){return is_present;}
+
         /**
          * \brief measure the temperature of the device
          * \return the measured temperature (the absolute 0 if not available)
          */
-        [[nodiscard]] virtual float getTemperature() { return absoluteZero; }
+        [[nodiscard]] virtual float getTemperature()const { return absoluteZero; }
+
+        virtual void print_config() = 0;
 
     protected:
         resultType _dta; ///< the raw data
+        bool is_present = false; ///< if the device has been found
 
+        /**
+         * @brief check the presence of the device
+         * @return return true if the device is found
+         */
+        virtual bool is_device_present() = 0;
+
+        /**
+         * @brief internal function for doing a measure
+         */
         virtual void m_Measure() = 0;
 
         /**
@@ -99,11 +115,11 @@ namespace i2c {
             Wire.endTransmission();
             Wire.requestFrom(device_addr, static_cast<byte>(2));
             if (lowFirst) {
-                uint16_t value = _read() | static_cast<uint8_t>(_read() << byte_shift);
+                uint16_t value = _read() | static_cast<uint16_t>(_read() << byte_shift);
                 Wire.endTransmission();
                 return value;
             }
-            uint16_t value = static_cast<uint8_t>(_read() << byte_shift) | _read();
+            uint16_t value = static_cast<uint16_t>(_read() << byte_shift) | _read();
             Wire.endTransmission();
             return value;
         }
@@ -111,9 +127,10 @@ namespace i2c {
         /**
          * \brief read the 2 bytes at the given register in the given device
          * \param reg the register to read
+         * \param lowFirst if true the lowest byte is get first
          * \return the value as signed integer
          */
-        [[nodiscard]] int16_t readS16(byte reg) const { return static_cast<int16_t>(read16(reg)); }
+        [[nodiscard]] int16_t readS16(byte reg, bool lowFirst = false) const { return static_cast<int16_t>(read16(reg, lowFirst)); }
 
         /**
          * \brief read the 3 bytes at the given register in the given device
@@ -127,13 +144,13 @@ namespace i2c {
             Wire.endTransmission();
             Wire.requestFrom(device_addr, static_cast<byte>(3));
             if (lowFirst) {
-                uint16_t value =
-                  _read() | static_cast<uint8_t>(_read() << byte_shift) | static_cast<uint8_t>(_read() << double_byte_shift);
+                uint32_t value =
+                  _read() | static_cast<uint32_t>(_read() << byte_shift) | static_cast<uint32_t>(_read() << double_byte_shift);
                 Wire.endTransmission();
                 return value;
             }
-            uint16_t value =
-              static_cast<uint8_t>(_read() << double_byte_shift) | static_cast<uint8_t>(_read() << byte_shift) | _read();
+            uint32_t value =
+              static_cast<uint32_t>(_read() << double_byte_shift) | static_cast<uint32_t>(_read() << byte_shift) | _read();
             Wire.endTransmission();
             return value;
         }
@@ -144,7 +161,7 @@ namespace i2c {
          * \param highFirst if true the highest byte is get first
          * \return the vector
          */
-        [[nodiscard]] vec3s16 readV16(byte reg, bool highFirst = false) const {
+        [[nodiscard]] vec3s16 readV16(byte reg, bool lowFirst = false) const {
             Wire.beginTransmission(device_addr);
             Wire.write(reg);
             constexpr uint8_t nb_byte_in_vector = 6;
@@ -152,23 +169,23 @@ namespace i2c {
             Wire.requestFrom(device_addr, nb_byte_in_vector);
             // Wait around until enough data is available
             while (Wire.available() < nb_byte_in_vector) {}
-            if (highFirst) {
+            if (lowFirst) {
                 // Shift values to create properly formed integer
-                return vec3s16{static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
-                               static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
-                               static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read())};
+                return vec3s16{static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
+                               static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
+                               static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift))};
             }
             // Shift values to create properly formed integer
-            return vec3s16{static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
-                           static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
-                           static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift))};
+            return vec3s16{static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
+                           static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
+                           static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read())};
         }
 
         /**
          * \brief read on unsigned byte on the bus
          * \return the byte read
          */
-        static uint8_t _read() { return static_cast<uint8_t>(Wire.read()); }
+        static uint32_t _read() { return static_cast<uint32_t>(Wire.read()); }
     };
 
 } // namespace i2c
