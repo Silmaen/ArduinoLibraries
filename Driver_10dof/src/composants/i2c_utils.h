@@ -27,6 +27,14 @@ namespace i2c {
          */
         device() = default;
 
+        virtual /**
+                 * @brief starts the communication
+                 */
+          void
+          begin() {
+            Wire.begin();
+        }
+
         /**
          * \brief get the stored acceleration
          * \return the stored acceleration

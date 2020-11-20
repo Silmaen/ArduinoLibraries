@@ -34,6 +34,7 @@ cmake-*
 
 .idea
 Adafruit*
+arduino_107126
 Arduino_MKRENV
 Grove*
 HAMqttDevice
