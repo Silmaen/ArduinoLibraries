@@ -1,8 +1,6 @@
 #include <imu10dof.h>
 #include <Arduino.h>
 
-constexpr uint16_t bufsize = 1000;
-
 imu10dof myDevice;
 imu10dof::measure_data data;
 
