@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.8.2)
 #  - EXT_LIB_NEEDED the Arduino libraries that need to be includes
 #  - INT_LIB_NEEDED le libraries inside this repository to add to the project
 # -------------------------------------------------------------------------------------------------------------------
-set(EXT_LIB_NEEDED core Wire)
-set(INT_LIB_NEEDED Utilities_BusIO)
+set(EXT_LIB_NEEDED core)
+set(INT_LIB_NEEDED)
 
 # -------------------------------------------------------------------------------------------------------------------
 #    AUTOMATED PART
@@ -19,14 +19,16 @@ if ("${SRCS}" STREQUAL "")
     message(STATUS "adding library ${LIB_NAME} INTERFACE")
     add_library(${LIB_NAME} INTERFACE)
     set(scope INTERFACE)
+    set(self_scope INTERFACE)
 else ()
     message(STATUS "adding library ${LIB_NAME} with sources")
     add_library(${LIB_NAME} ${SRCS} ${HDRS})
     set(scope PRIVATE)
+    set(self_scope PUBLIC)
 endif ()
 
 target_include_directories(${LIB_NAME}
-        PUBLIC
+        ${self_scope}
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         )
 
