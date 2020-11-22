@@ -1,0 +1,58 @@
+cmake_minimum_required(VERSION 3.8.2)
+
+set(LIB_NAME Driver_10dof)
+set(EXT_LIB_NEEDED core Wire)
+
+file(GLOB_RECURSE SRCS *.cpp)
+file(GLOB_RECURSE HDRS *.h *.hpp)
+
+if ("${SRCS}" STREQUAL "")
+    message(STATUS "adding library ${LIB_NAME} INTERFACE")
+    add_library(${LIB_NAME} INTERFACE)
+    target_include_directories(${LIB_NAME}
+            INTERFACE
+            "${CMAKE_CURRENT_SOURCE_DIR}/src"
+            )
+
+    if (ARDUINO)
+        target_link_arduino_libraries(${LIB_NAME}
+                INTERFACE
+                ${EXT_LIB_NEEDED}
+                )
+    else ()
+        # For other platforms standard library is linked by default
+    endif ()
+else ()
+    message(STATUS "adding library ${LIB_NAME} ${SRCS} ${HDRS}")
+    add_library(${LIB_NAME} ${SRCS} ${HDRS})
+    target_include_directories(${LIB_NAME}
+            PUBLIC
+            "${CMAKE_CURRENT_SOURCE_DIR}/src"
+            )
+
+    if (ARDUINO)
+        target_link_arduino_libraries(${LIB_NAME}
+                PRIVATE
+                ${EXT_LIB_NEEDED}
+                )
+    else ()
+        # For other platforms standard library is linked by default
+    endif ()
+endif ()
+
+file(GLOB EXAMPLES examples/*)
+foreach (ex ${EXAMPLES})
+    get_filename_component(ex_name ${ex} NAME)
+    message(STATUS "adding library example ${ex_name}")
+    set(EXAMPLE_PROJECT_NAME ${LIB_NAME}_Example_${ex_name})
+    set(INO_CPP ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE_PROJECT_NAME}/${ex_name}.ino.cpp)
+    project(${EXAMPLE_PROJECT_NAME} CXX)
+    add_executable(${EXAMPLE_PROJECT_NAME} ${INO_CPP} ${ex}/${ex_name}.ino)
+    add_custom_command(
+            OUTPUT ${INO_CPP}
+            DEPENDS ${ex}/${ex_name}.ino
+            COMMAND ${CMAKE_COMMAND} -E copy ${ex}/${ex_name}.ino ${INO_CPP}
+    )
+    target_link_arduino_libraries(${EXAMPLE_PROJECT_NAME} PRIVATE ${EXT_LIB_NEEDED})
+    target_link_libraries(${EXAMPLE_PROJECT_NAME} PRIVATE ${LIB_NAME})
+endforeach ()
