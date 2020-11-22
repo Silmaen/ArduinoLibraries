@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8.2)
 #  - INT_LIB_NEEDED le libraries inside this repository to add to the project
 # -------------------------------------------------------------------------------------------------------------------
 set(EXT_LIB_NEEDED core Wire)
-set(INT_LIB_NEEDED Utilities_BusIO)
+set(INT_LIB_NEEDED)
 
 # -------------------------------------------------------------------------------------------------------------------
 #    AUTOMATED PART
@@ -18,43 +18,29 @@ file(GLOB_RECURSE HDRS *.h *.hpp)
 if ("${SRCS}" STREQUAL "")
     message(STATUS "adding library ${LIB_NAME} INTERFACE")
     add_library(${LIB_NAME} INTERFACE)
-    target_include_directories(${LIB_NAME}
-            INTERFACE
-            "${CMAKE_CURRENT_SOURCE_DIR}/src"
-            )
-
-    if (ARDUINO)
-        target_link_arduino_libraries(${LIB_NAME}
-                INTERFACE
-                ${EXT_LIB_NEEDED}
-                )
-        target_link_libraries(${LIB_NAME}
-                INTERFACE
-                ${INT_LIB_NEEDED}
-                )
-    else ()
-        # For other platforms standard library is linked by default
-    endif ()
+    set(scope INTERFACE)
 else ()
     message(STATUS "adding library ${LIB_NAME} with sources")
     add_library(${LIB_NAME} ${SRCS} ${HDRS})
-    target_include_directories(${LIB_NAME}
-            PUBLIC
-            "${CMAKE_CURRENT_SOURCE_DIR}/src"
-            )
+    set(scope PRIVATE)
+endif ()
 
-    if (ARDUINO)
-        target_link_arduino_libraries(${LIB_NAME}
-                PRIVATE
-                ${EXT_LIB_NEEDED}
-                )
-        target_link_libraries(${LIB_NAME}
-                PRIVATE
-                ${INT_LIB_NEEDED}
-                )
-    else ()
-        # For other platforms standard library is linked by default
-    endif ()
+target_include_directories(${LIB_NAME}
+        PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        )
+
+if (ARDUINO)
+    target_link_arduino_libraries(${LIB_NAME}
+            ${scope}
+            ${EXT_LIB_NEEDED}
+            )
+    target_link_libraries(${LIB_NAME}
+            ${scope}
+            ${INT_LIB_NEEDED}
+            )
+else ()
+    # For other platforms standard library is linked by default
 endif ()
 
 file(GLOB EXAMPLES examples/*)

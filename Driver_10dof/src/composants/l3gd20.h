@@ -21,7 +21,7 @@ namespace l3gd20 {
     constexpr uint8_t last4bits  = 0b11110000;
     constexpr uint8_t first4bits = 0b00001111;
 
-    class Gyro : public i2c::device<gyroscope_address, vec3f> { // 0011110x { {
+    class Gyro : public i2c::SensorDevice<gyroscope_address, vec3f> { // 0011110x { {
     public:
         /**
          * \brief define the modes for data rate and bandwidth
@@ -86,7 +86,7 @@ namespace l3gd20 {
          * @return
          */
         bool begin() override{
-            if (! i2c::device<gyroscope_address, vec3f>::begin() )
+            if (! i2c::SensorDevice<gyroscope_address, vec3f>::begin() )
                 return false;
             setRange(setting.range);
             setRate(setting.rate);
@@ -237,7 +237,7 @@ namespace l3gd20 {
         }
 
     private:
-        float factor = GyroSensitivity_250DPS; ///< foctor to convert raw data into physical value
+        float factor = GyroSensitivity_250DPS; ///< factor to convert raw data into physical value
 
         Setting setting; ///< device setting
 
@@ -280,18 +280,18 @@ namespace l3gd20 {
          */
         bool is_device_present() override{
             uint8_t id = read8(Registers::WHO_AM_I);
-            is_present = false;
+            presence() = false;
             if ((id == L3GD20_ID) || (id == L3GD20H_ID)) {
-                is_present = true;
+                presence() = true;
             }
-            return is_present;
+            return presence();
         }
 
         /**
          * \brief read the device for measure data
          */
         void m_Measure() override {
-            if (! is_present) {
+            if (! presence()) {
                 Serial.println("No Gyro device");
                 return;
             }
@@ -301,9 +301,9 @@ namespace l3gd20 {
                 return;
             }
             vec3s16 raw = readV16(OUT_X_L | 0x80, true);
-            _dta.x()    = static_cast<float>(raw.x()) * factor;
-            _dta.y()    = static_cast<float>(raw.y()) * factor;
-            _dta.z()    = static_cast<float>(raw.z()) * factor;
+            data().x()    = static_cast<float>(raw.x()) * factor;
+            data().y()    = static_cast<float>(raw.y()) * factor;
+            data().z()    = static_cast<float>(raw.z()) * factor;
         }
 
     };

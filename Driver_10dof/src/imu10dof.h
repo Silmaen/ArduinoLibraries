@@ -4,11 +4,6 @@
 
 #pragma once
 
-#define LSM303_ACCEL
-#define LSM303_MAG
-#define L3GD20
-#define BMP085
-
 #include "composants/bmp085.h"
 #include "composants/l3gd20.h"
 #include "composants/lsm303.h"
@@ -16,11 +11,11 @@
 class imu10dof {
 public:
     struct measure_data {
-        vec3f accel;
-        vec3f gyro;
-        vec3f magento;
-        float pressure;
-        float temperature;
+        vec3f accel = vec3f();
+        vec3f gyro = vec3f();
+        vec3f magento = vec3f();
+        float pressure = 0;
+        float temperature = 0;
     };
 
     // construct, init
@@ -41,28 +36,28 @@ public:
 
     void checks(){
         Serial.print("Accelerometer: ");
-        if (AccSensor.get_presence()) {
+        if (AccSensor.presence()) {
             Serial.println(" [  OK  ]");
         }else{
             Serial.println(" [ FAIL ]");
         }
         AccSensor.print_config();
         Serial.print("Magnetometer : ");
-        if (MagSensor.get_presence()) {
+        if (MagSensor.presence()) {
             Serial.println(" [  OK  ]");
         }else{
             Serial.println(" [ FAIL ]");
         }
         MagSensor.print_config();
         Serial.print("Gyroscope    : ");
-        if (GyrSensor.get_presence()) {
+        if (GyrSensor.presence()) {
             Serial.println(" [  OK  ]");
         }else{
             Serial.println(" [ FAIL ]");
         }
         GyrSensor.print_config();
         Serial.print("Barometer    : ");
-        if (BarSensor.get_presence()) {
+        if (BarSensor.presence()) {
             Serial.println(" [  OK  ]");
         }else{
             Serial.println(" [ FAIL ]");
