@@ -40,7 +40,7 @@ namespace bmp085 {
     constexpr int16_t  B_MC  = -8711;
     constexpr int16_t  B_MD  = 2868;
     /*=========================================================================*/
-    class Baro : public i2c::device<barometer_address, float> {
+    class Baro : public i2c::SensorDevice<barometer_address, float> {
     public:
         /**
          * \brief mode of the device
@@ -71,7 +71,7 @@ namespace bmp085 {
         explicit Baro(const Setting &settings) : setting{settings} {}
 
         bool begin() override {
-            if (!i2c::device<barometer_address, float>::begin())
+            if (!i2c::SensorDevice<barometer_address, float>::begin())
                 return false;
             readCalibration();
             return true;
@@ -139,18 +139,18 @@ namespace bmp085 {
          */
         bool is_device_present() override {
             uint8_t id = read8(Registers::CHIPID);
-            is_present = false;
+            presence() = false;
             if (id == 0x55) {
-                is_present = true;
+                presence() = true;
             }
-            return is_present;
+            return presence();
         }
 
         /**
          * \brief read the device for measure data
          */
         void m_Measure() override {
-            if (!is_present) {
+            if (!presence()) {
                 Serial.println("No Baro device");
                 return;
             }
@@ -179,10 +179,10 @@ namespace bmp085 {
             } else {
                 p = (b7 / b4) << 1;
             }
-            x1   = (p >> byte_shift) * (p >> byte_shift);
-            x1   = (x1 * magic_number5) >> double_byte_shift;
-            x2   = (magic_number6 * p) >> double_byte_shift;
-            _dta = (p + ((x1 + x2 + magic_number7) >> shift4)) * HPafromPa;
+            x1     = (p >> byte_shift) * (p >> byte_shift);
+            x1     = (x1 * magic_number5) >> double_byte_shift;
+            x2     = (magic_number6 * p) >> double_byte_shift;
+            data() = (p + ((x1 + x2 + magic_number7) >> shift4)) * HPafromPa;
         }
 
         /**

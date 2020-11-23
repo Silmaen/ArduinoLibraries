@@ -1,2 +1,15 @@
-IMU10DOF	KEYWORD1
-measureDistanceCm	KEYWORD2
+imu10dof	KEYWORD1
+
+begin	KEYWORD2
+checks	KEYWORD2
+measureAccel	KEYWORD2
+measureGyro	KEYWORD2
+measureMagneto	KEYWORD2
+measureBaro	KEYWORD2
+measureAll	KEYWORD2
+getAccel	KEYWORD2
+getGyro	KEYWORD2
+getMagneto	KEYWORD2
+getBaro	KEYWORD2
+getTemerature	KEYWORD2
+getAll	KEYWORD2

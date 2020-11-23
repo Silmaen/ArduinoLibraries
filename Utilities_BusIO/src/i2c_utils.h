@@ -20,12 +20,12 @@ namespace i2c {
      * \brief base class for i2c Devices
      */
     template<uint8_t device_addr, class resultType>
-    class device {
+    class SensorDevice {
     public:
         /**
          * \brief default constructor
          */
-        device() = default;
+        SensorDevice() = default;
 
         /**
          * @brief setup device
@@ -52,7 +52,8 @@ namespace i2c {
             return _dta;
         }
 
-        const bool& get_presence(){return is_present;}
+        bool presence()const noexcept {return is_present;}
+        bool &presence() noexcept { return is_present; }
 
         /**
          * \brief measure the temperature of the device
@@ -62,20 +63,15 @@ namespace i2c {
 
         virtual void print_config() = 0;
 
-    protected:
-        resultType _dta; ///< the raw data
-        bool is_present = false; ///< if the device has been found
+
+        resultType  data() const noexcept { return _dta; }
+        resultType &data() noexcept { return _dta; }
 
         /**
          * @brief check the presence of the device
          * @return return true if the device is found
          */
         virtual bool is_device_present() = 0;
-
-        /**
-         * @brief internal function for doing a measure
-         */
-        virtual void m_Measure() = 0;
 
         /**
          * \brief \brief write one bytes at the given register
@@ -181,11 +177,19 @@ namespace i2c {
                            static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read())};
         }
 
+    private:
+        resultType _dta = resultType() ; ///< the raw data
+        bool is_present = false; ///< if the device has been found
         /**
          * \brief read on unsigned byte on the bus
          * \return the byte read
          */
         static uint32_t _read() { return static_cast<uint32_t>(Wire.read()); }
+
+        /**
+         * @brief internal function for doing a measure
+         */
+        virtual void m_Measure() = 0;
     };
 
 } // namespace i2c
