@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "math3d.h"
+#include <vector3d.h>
 
 #include <Wire.h>
 
@@ -157,7 +157,7 @@ namespace i2c {
          * \param highFirst if true the highest byte is get first
          * \return the vector
          */
-        [[nodiscard]] vec3s16 readV16(byte reg, bool lowFirst = false) const {
+        [[nodiscard]] math::vec3s16 readV16(byte reg, bool lowFirst = false) const {
             Wire.beginTransmission(device_addr);
             Wire.write(reg);
             constexpr uint8_t nb_byte_in_vector = 6;
@@ -167,12 +167,12 @@ namespace i2c {
             while (Wire.available() < nb_byte_in_vector) {}
             if (lowFirst) {
                 // Shift values to create properly formed integer
-                return vec3s16{static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
+                return math::vec3s16{static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
                                static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
                                static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift))};
             }
             // Shift values to create properly formed integer
-            return vec3s16{static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
+            return math::vec3s16{static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
                            static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
                            static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read())};
         }

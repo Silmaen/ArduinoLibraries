@@ -46,7 +46,7 @@ namespace lsm303 {
     /**
      * \brief class to handle accelerometer
      */
-    class Accel : public i2c::SensorDevice<accelerometer_address, vec3f> { // 0011001x
+    class Accel : public i2c::SensorDevice<accelerometer_address, math::vec3f> { // 0011001x
     public:
         /**
          * @brief Mode of the Accelerometer
@@ -116,7 +116,7 @@ namespace lsm303 {
          * @return true if success
          */
         bool begin() override {
-            if (! i2c::SensorDevice<accelerometer_address, vec3f>::begin() )
+            if (! i2c::SensorDevice<accelerometer_address, math::vec3f>::begin() )
                 return false;
             // there is no whoami function so, we check one register
             applySettings();
@@ -334,7 +334,7 @@ namespace lsm303 {
                 Serial.println("No Accel Data");
                 return;
             }
-            vec3s16 raw = readV16(OUT_X_L_A  | 0x80,true);
+            math::vec3s16 raw = readV16(OUT_X_L_A  | 0x80,true);
             data().x()    = static_cast<float>(raw.x() >> 4) * factor;
             data().y()    = static_cast<float>(raw.y() >> 4) * factor;
             data().z()    = static_cast<float>(raw.z() >> 4) * factor;
@@ -397,7 +397,7 @@ namespace lsm303 {
     /**
      * \brief class to handle magnetometer
      */
-    class Mag : public i2c::SensorDevice<magnetometer_address, vec3f> { // 0011110x {
+    class Mag : public i2c::SensorDevice<magnetometer_address, math::vec3f> { // 0011110x {
     public:
         /**
          * \brief list of possible range (large range means coarser resolution)
@@ -452,7 +452,7 @@ namespace lsm303 {
          * @return true if success
          */
         bool begin() override {
-            i2c::SensorDevice<magnetometer_address, vec3f>::begin();
+            i2c::SensorDevice<magnetometer_address, math::vec3f>::begin();
             writeCommand(Registers::MR_REG_M, 0x00U);
             presence() = is_device_present();
             if (presence()) {
@@ -657,7 +657,7 @@ namespace lsm303 {
                 Serial.println("No mag Data");
                 return;
             }
-            vec3s16 raw = readV16(OUT_X_H_M );
+            math::vec3s16 raw = readV16(OUT_X_H_M );
             // WARNING: th Y and Z axis are inverted (see the registers)
             data().x()    = static_cast<float>(raw.x()) * factorXY;
             data().y()    = static_cast<float>(raw.z()) * factorXY;

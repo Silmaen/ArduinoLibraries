@@ -11,9 +11,9 @@
 class imu10dof {
 public:
     struct measure_data {
-        vec3f accel = vec3f();
-        vec3f gyro = vec3f();
-        vec3f magento = vec3f();
+        math::vec3f accel = math::vec3f();
+        math::vec3f gyro = math::vec3f();
+        math::vec3f magento = math::vec3f();
         float pressure = 0;
         float temperature = 0;
     };
@@ -66,9 +66,9 @@ public:
     }
 
     // measure, store return the value
-    [[nodiscard]] const vec3f &measureAccel() { return AccSensor.measure(); }
-    [[nodiscard]] const vec3f &measureGyro() { return GyrSensor.measure(); }
-    [[nodiscard]] const vec3f &measureMagneto() { return MagSensor.measure(); }
+    [[nodiscard]] const math::vec3f &measureAccel() { return AccSensor.measure(); }
+    [[nodiscard]] const math::vec3f &measureGyro() { return GyrSensor.measure(); }
+    [[nodiscard]] const math::vec3f &measureMagneto() { return MagSensor.measure(); }
     [[nodiscard]] const float &measureBaro() { return BarSensor.measure(); }
 
     /**
@@ -86,9 +86,9 @@ public:
     }
 
     // only return the actual stored value
-    [[nodiscard]] const vec3f &getAccel() const noexcept { return AccSensor.getMeasure(); };
-    [[nodiscard]] const vec3f &getGyro() const noexcept { return GyrSensor.getMeasure(); };
-    [[nodiscard]] const vec3f &getMagneto() const noexcept { return MagSensor.getMeasure(); };
+    [[nodiscard]] const math::vec3f &getAccel() const noexcept { return AccSensor.getMeasure(); };
+    [[nodiscard]] const math::vec3f &getGyro() const noexcept { return GyrSensor.getMeasure(); };
+    [[nodiscard]] const math::vec3f &getMagneto() const noexcept { return MagSensor.getMeasure(); };
     [[nodiscard]] const float &getBaro() const noexcept { return BarSensor.getMeasure(); }
     [[nodiscard]] float getTemerature() const noexcept { return BarSensor.getTemperature(); }
 

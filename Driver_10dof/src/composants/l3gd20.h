@@ -21,7 +21,7 @@ namespace l3gd20 {
     constexpr uint8_t last4bits  = 0b11110000;
     constexpr uint8_t first4bits = 0b00001111;
 
-    class Gyro : public i2c::SensorDevice<gyroscope_address, vec3f> { // 0011110x { {
+    class Gyro : public i2c::SensorDevice<gyroscope_address, math::vec3f> { // 0011110x { {
     public:
         /**
          * \brief define the modes for data rate and bandwidth
@@ -86,7 +86,7 @@ namespace l3gd20 {
          * @return
          */
         bool begin() override{
-            if (! i2c::SensorDevice<gyroscope_address, vec3f>::begin() )
+            if (! i2c::SensorDevice<gyroscope_address, math::vec3f>::begin() )
                 return false;
             setRange(setting.range);
             setRate(setting.rate);
@@ -300,7 +300,7 @@ namespace l3gd20 {
                 Serial.println("No Gyro data");
                 return;
             }
-            vec3s16 raw = readV16(OUT_X_L | 0x80, true);
+            math::vec3s16 raw = readV16(OUT_X_L | 0x80, true);
             data().x()    = static_cast<float>(raw.x()) * factor;
             data().y()    = static_cast<float>(raw.y()) * factor;
             data().z()    = static_cast<float>(raw.z()) * factor;

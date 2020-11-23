@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.8.2)
 #  - EXT_LIB_NEEDED the Arduino libraries that need to be includes
 #  - INT_LIB_NEEDED le libraries inside this repository to add to the project
 # -------------------------------------------------------------------------------------------------------------------
-set(EXT_LIB_NEEDED core Wire)
-set(INT_LIB_NEEDED Data_LinearAlgebra)
+set(EXT_LIB_NEEDED core )
+set(INT_LIB_NEEDED)
 
 # -------------------------------------------------------------------------------------------------------------------
 #    AUTOMATED PART

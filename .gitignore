@@ -34,18 +34,15 @@ cmake-*
 
 .idea
 Adafruit*
-arduino_107126
-Arduino_MKRENV
+Arduino_*
 Grove*
 HAMqttDevice
 Kalman_Filter_Library
 MQTT
 Mirf
 RTClib
-SHT1x
-SdFat
+RTCZero
 Servo
-ShiftPWM-master
 Sodaq*
 SparkFun*
 TinyWireM

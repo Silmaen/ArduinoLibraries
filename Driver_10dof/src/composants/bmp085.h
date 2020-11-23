@@ -70,6 +70,10 @@ namespace bmp085 {
          */
         explicit Baro(const Setting &settings) : setting{settings} {}
 
+        /**
+         * @brief initialize the device
+         * @return true if everything is ok
+         */
         bool begin() override {
             if (!i2c::SensorDevice<barometer_address, float>::begin())
                 return false;
@@ -95,6 +99,9 @@ namespace bmp085 {
          */
         [[nodiscard]] const Mode &getMode() const { return setting.mode; }
 
+        /**
+         * @brief display in serial port the config of the device
+         */
         void print_config() override {
             Serial.println("chipset BMP085");
             Serial.print("Mode : ");
