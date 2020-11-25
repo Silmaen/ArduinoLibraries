@@ -5,6 +5,28 @@
 
 namespace math {
 
+    void Matrix3x3::makeRotationBetweenVectors(const vec3f& a, const vec3f& b){
+        vec3f u = a.cross(b).normalized(); // rotation axe
+        float ct = a.normalized().dot(b.normalized()); // rotation cosius of angle
+        float st = sin(acos(ct));
+        (*this)(1,1) = u[0]*u[0] * (1.f - ct) + ct;
+        (*this)(1,2) = u[0]*u[1] * (1.f - ct) - u[3] * st;
+        (*this)(1,3) = u[0]*u[2] * (1.f - ct) + u[2] * st;
+        (*this)(2,1) = u[1]*u[0] * (1.f - ct) + u[3] * st;
+        (*this)(2,2) = u[1]*u[1] * (1.f - ct) + ct;
+        (*this)(2,3) = u[1]*u[2] * (1.f - ct) - u[0] * st;
+        (*this)(3,1) = u[2]*u[0] * (1.f - ct) - u[2] * st;
+        (*this)(3,2) = u[2]*u[1] * (1.f - ct) + u[0] * st;
+        (*this)(3,3) = u[2]*u[2] * (1.f - ct) + ct;
+    }
+
+    void Matrix3x3::makeRotationLookAndUp(const vec3f& lookAt, const vec3f& up){
+        vec3f x = lookAt.normalized();
+        vec3f y = up.normalized().cross(x);
+        vec3f z = x.cross(y);
+        setByColumn(x,y,z);
+    }
+
     bool Matrix3x3::isNull() const {
         for (uint8_t i = 0; i < 9; ++i) {
             if (isNotNull(data[i]))

@@ -28,4 +28,19 @@ namespace math {
         res.fromModArg(sqrtf(c.mod()), c.arg() / 2.F);
         return res;
     }
+
+    Complex pow(const Complex& c, const float& e){
+        Complex res;
+        return res.fromModArg(::powf(c.mod(),e), e * c.arg());
+    }
+
+    Complex log(const Complex& c){
+        return Complex(::log(c.mod()), c.arg());
+    }
+
+
+    Complex exp(const Complex& c){
+        Complex res;
+        return res.fromModArg(::expf(c.mod()), c.arg());
+    }
 } // namespace math

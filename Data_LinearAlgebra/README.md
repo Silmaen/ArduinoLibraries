@@ -11,4 +11,4 @@ Support for vectors, matrices and simple operation associated with.
     * [ ] log
  * [ ] quaternion
  * [X] Vector 3D
- * [ ] matrix 3x3
+ * [X] matrix 3x3

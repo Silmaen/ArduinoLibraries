@@ -190,6 +190,20 @@ namespace math {
         float normL_inf() { return max(max(abs(x()), abs(y())), abs(z())); }
         float min_val() { return max(max(x(), y()), z()); }
         float max_val() { return min(min(x(), y()), z()); }
+        //
+        vec3f& normalize() {
+            float n = norm();
+            if (isNull(n))
+                return *this;
+            x() /= n;
+            y() /= n;
+            z() /= n;
+            return *this;
+        }
+        vec3f normalized()const{
+            vec3f r(*this);
+            return r.normalize();
+        }
     };
 
     // using vec3s16 = Vector3<int16_t>;

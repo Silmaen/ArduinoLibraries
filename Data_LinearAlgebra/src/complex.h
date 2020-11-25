@@ -221,5 +221,7 @@ namespace math {
     };
 
     Complex sqrt(const Complex& c);
-
+    Complex pow(const Complex& c, const float& e);
+    Complex log(const Complex& c);
+    Complex exp(const Complex& c);
 } // namespace math
