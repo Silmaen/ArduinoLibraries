@@ -12,6 +12,7 @@
 #endif
 
 constexpr float   absoluteZero      = -273.15;
+constexpr uint8_t semi_byte_shift   = 4U;
 constexpr uint8_t byte_shift        = 8U;
 constexpr uint8_t double_byte_shift = 16U;
 
@@ -98,6 +99,13 @@ namespace i2c {
             Wire.endTransmission();
             return value;
         }
+
+        /**
+         * \brief read one bytes at the given register in the given device
+         * \param reg the register to read
+         * \return the value as signed integer
+         */
+        [[nodiscard]] int16_t readS8(byte reg) const { return static_cast<int8_t>(read8(reg)); }
 
         /**
          * \brief read the 2 bytes at the given register in the given device

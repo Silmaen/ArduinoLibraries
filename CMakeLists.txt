@@ -7,6 +7,8 @@ elseif(BOARD STREQUAL "micro")
     set(ARDUINO_BOARD "Arduino Micro [avr.micro]") # Arduino Micro
 elseif(BOARD STREQUAL "mega")
     set(ARDUINO_BOARD "Arduino Mega or Mega 2560 [avr.mega]") # Arduino Mega or Mega 2560
+elseif(BOARD STREQUAL "wemos")
+    set(ARDUINO_BOARD "LOLIN(WEMOS) D1 R2 & mini [esp8266.d1_mini]") # LOLIN(WEMOS) D1 R2 & mini
 else()
     message("Problem: board undefined")
 endif()
