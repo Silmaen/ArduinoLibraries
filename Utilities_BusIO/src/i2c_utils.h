@@ -17,6 +17,44 @@ constexpr uint8_t byte_shift        = 8U;
 constexpr uint8_t double_byte_shift = 16U;
 
 namespace i2c {
+
+    class Address {
+    public:
+        Address() =default;
+        ~Address() = default;
+        Address(const Address&) = default;
+        Address(Address&&) = default;
+        Address& operator=(const Address&)noexcept = default;
+        Address& operator=(Address&&)noexcept = default;
+        explicit Address(uint8_t addr):_addr{addr}{_addr&=addrMask;}
+        // comparison
+        bool operator==(const Address& o){return _addr==o._addr;}
+        bool operator!=(const Address& o){return _addr!=o._addr;}
+        bool operator>(const Address& o){return _addr>o._addr;}
+        bool operator>=(const Address& o){return _addr>=o._addr;}
+        bool operator<(const Address& o){return _addr<o._addr;}
+        bool operator<=(const Address& o){return _addr<=o._addr;}
+        // address incrementation
+        Address& operator++(){if(_addr<addrMask)_addr+=2;return *this;}
+        Address operator++(int){Address t(*this); if(_addr<addrMask)_addr+=2;return t;}
+        Address& operator--(){if(_addr>1)_addr-=2;return *this;}
+        Address operator--(int){Address t(*this); if(_addr>1)_addr-=2;return t;}
+        Address next();
+        Address previous();
+        // address position
+        bool isFirst(){return (_addr & addrMask)==0;}
+        bool isLast(){return (_addr & addrMask)==addrMask;}
+        // address is
+        bool isReserved();
+
+        uint8_t to7bits(){return _addr>>1U;}
+    private:
+        uint8_t _addr = 0x00;
+        static constexpr uint8_t addrMask = 0xFE;
+    };
+
+    void scanner();
+
     /**
      * \brief base class for i2c Devices
      */
