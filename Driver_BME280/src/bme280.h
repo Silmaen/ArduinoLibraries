@@ -11,6 +11,7 @@ namespace bme280 {
     constexpr uint8_t deviceAddress = 0x76; //0b111011X; X = 0 case set to GND... TODO: check it
     constexpr uint8_t chipId = 0x60;
     constexpr uint8_t resetCode = 0x56;
+    constexpr uint8_t statusMask = 0b1001U;
 
     struct SensorData{
         float Temperature;
@@ -75,6 +76,7 @@ namespace bme280 {
             writeCommand(R_CTRL_HUM, setting.toCtrlHumReg());
             writeCommand(R_CONFIG, setting.toConfigReg());
             writeCommand(R_CTRL_MEAS, setting.toCtrlMeasReg());
+            writeCommand(R_RESET, resetCode);
         }
 
         /**
@@ -176,11 +178,7 @@ namespace bme280 {
                 writeCommand(R_CTRL_MEAS, setting.toCtrlMeasReg());
                 delay(setting.maxMeasurementTime());
             }
-            uint8_t status_reg = read8(R_STATUS);
-            if (status_reg != 0) {// device is still busy
-                Serial.println("BME280 is not yet ready");
-                return;
-            }
+            while(read8(R_STATUS & statusMask) != 0); // wait for data ready
             readTemperature();
             readPressure();
             readHumidity();

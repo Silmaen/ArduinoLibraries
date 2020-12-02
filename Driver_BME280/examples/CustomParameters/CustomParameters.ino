@@ -3,18 +3,21 @@
 
 bme280::Setting myparam{
   bme280::WorkingMode::Normal,
-  bme280::Oversampling::O_X8,
-  bme280::Oversampling::O_X4,
-  bme280::Oversampling::O_X4,
+  bme280::Oversampling::O_X16,
+  bme280::Oversampling::O_X16,
+  bme280::Oversampling::O_X16,
   bme280::StandyByTime::SBT_0_5,
   bme280::FilterCoefficient::F_16
 };
 
-bme280::Device sensor(bme280::indoorNavigation);
+bme280::Device sensor(myparam);
 
 void setup() {
     Serial.begin(115200);
-    sensor.begin();
+    while(!Serial);
+    if (!sensor.begin()) {
+        Serial.println("Error: no device");
+    }
 }
 
 void loop() {
@@ -25,5 +28,5 @@ void loop() {
     Serial.print("% ");
     Serial.print(data.Pressure, 2);
     Serial.println("hPa");
-    delay(1000); // wait 1 second
+    delay(60); // wait 1 second
 }
