@@ -67,20 +67,20 @@ namespace bme280 {
         FilterCoefficient filter                  = FilterCoefficient::Off; ///< filter coefficient
 
         constexpr Setting(const WorkingMode &      m,
-                const Oversampling &     po,
-                const Oversampling &     to,
-                const Oversampling &     ho,
-                const StandyByTime &     sdt,
-                const FilterCoefficient &fc) :
+                          const Oversampling &     po,
+                          const Oversampling &     to,
+                          const Oversampling &     ho,
+                          const StandyByTime &     sdt,
+                          const FilterCoefficient &fc) :
             mode{m},
             pressureOversampling{po}, temperatureOversampling{to}, humidityOversampling{ho}, sdTime{sdt}, filter{fc} {}
 
         uint8_t toCtrlHumReg() { return static_cast<uint8_t>(humidityOversampling); }
         uint8_t toCtrlMeasReg() {
-            return static_cast<uint8_t>(temperatureOversampling)
-                << 5u + static_cast<uint8_t>(pressureOversampling) << 2u + static_cast<uint8_t>(mode);
+            return (static_cast<uint8_t>(temperatureOversampling) << 5u) + (static_cast<uint8_t>(pressureOversampling) << 2u) +
+                   static_cast<uint8_t>(mode);
         }
-        uint8_t  toConfigReg() { return static_cast<uint8_t>(sdTime) << 5u + static_cast<uint8_t>(filter) << 2u; }
+        uint8_t  toConfigReg() { return (static_cast<uint8_t>(sdTime) << 5u) + (static_cast<uint8_t>(filter) << 2u); }
         void     print() {}
         uint16_t maxMeasurementTime() {
             float estimation = 1.25f + (2.3f * static_cast<float>(temperatureOversampling));

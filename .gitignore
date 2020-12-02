@@ -42,7 +42,10 @@ MQTT
 Mirf
 RTClib
 RTCZero
+SdFat
 Servo
+ShiftPWM-master
+SHT1x
 Sodaq*
 SparkFun*
 TinyWireM
