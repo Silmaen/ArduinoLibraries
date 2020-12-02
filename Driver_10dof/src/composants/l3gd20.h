@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "i2c_utils.h"
+#include <i2c_utils.h>
 
 namespace l3gd20 {
     /*=========================================================================

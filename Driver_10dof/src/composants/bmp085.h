@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "i2c_utils.h"
+#include <i2c_utils.h>
 
 constexpr uint8_t shift4  = 4U;
 constexpr uint8_t shift11 = 11U;

@@ -4,7 +4,7 @@
 lsm303::Accel myDevice;
 
 static uint64_t last_ts, ts;
-static vec3f last_acc, acc, vibe;
+static math::vec3f last_acc, acc, vibe;
 
 void setup() {
     Serial.begin(115200);

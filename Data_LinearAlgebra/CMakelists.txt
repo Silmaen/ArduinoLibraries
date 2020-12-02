@@ -27,6 +27,7 @@ else ()
     set(self_scope PUBLIC)
 endif ()
 
+add_dependencies(All_lib_only ${LIB_NAME})
 target_include_directories(${LIB_NAME}
         ${self_scope}
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
@@ -51,7 +52,7 @@ foreach (ex ${EXAMPLES})
     message(STATUS "adding library example ${ex_name}")
     set(EXAMPLE_PROJECT_NAME ${LIB_NAME}_Example_${ex_name})
     set(INO_CPP ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE_PROJECT_NAME}/${ex_name}.ino.cpp)
-    project(${EXAMPLE_PROJECT_NAME} CXX)
+    #project(${EXAMPLE_PROJECT_NAME} CXX)
     add_executable(${EXAMPLE_PROJECT_NAME} ${INO_CPP} ${ex}/${ex_name}.ino)
     add_custom_command(
             OUTPUT ${INO_CPP}
@@ -60,4 +61,5 @@ foreach (ex ${EXAMPLES})
     )
     target_link_arduino_libraries(${EXAMPLE_PROJECT_NAME} PRIVATE ${EXT_LIB_NEEDED})
     target_link_libraries(${EXAMPLE_PROJECT_NAME} PRIVATE ${LIB_NAME} ${INT_LIB_NEEDED})
+    add_dependencies(All_examples ${EXAMPLE_PROJECT_NAME})
 endforeach ()

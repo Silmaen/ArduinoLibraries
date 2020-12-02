@@ -16,6 +16,12 @@ set(ARDUINO_WARNING all)
 set(CMAKE_TOOLCHAIN_FILE cmake/Arduino-toolchain.cmake)
 
 project(Arduino_libraries)
+add_custom_target(All)
+add_custom_target(All_lib_only)
+add_custom_target(All_examples)
+
+add_dependencies(All All_lib_only)
+add_dependencies(All All_examples)
 
 MACRO(SUBDIRLIST result curdir)
     FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
