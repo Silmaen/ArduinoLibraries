@@ -33,7 +33,7 @@ public:
      *
      * \param ssid Pointer to the SSID string.
      */
-    int begin(const char* ssid);
+    wl_status_t begin(const char* ssid);
 
     /**
      * \brief Start Wifi connection with passphrase
@@ -44,7 +44,10 @@ public:
      * \param passphrase Passphrase. Valid characters in a passphrase
      *        must be between ASCII 32-126 (decimal).
      */
-    int begin(const char* ssid, const char *passphrase);
+    wl_status_t begin(const char* ssid, const char *passphrase);
+
+
+    wl_status_t beginAndConnect(const char* ssid, const char *passphrase);
 
     /**
      * \brief Change Ip configuration settings disabling the dhcp client
@@ -54,7 +57,7 @@ public:
      * \param dns_server2     IP configuration for DNS server 1
      * \param dns_server1     IP configuration for DNS server 2
      */
-    void config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns_server1= 0x00000000U, IPAddress dns_server2= 0x00000000U);
+    void config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns_server1= IPAddress(), IPAddress dns_server2= IPAddress());
 
     /**
      * \brief Set the hostname used for DHCP requests

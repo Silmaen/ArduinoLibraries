@@ -26,16 +26,27 @@ IPAddress Wifi::Device::gatewayIP() {
     return WiFi.gatewayIP();
 }
 
-int Wifi::Device::begin(const char *ssid) {
-    return WiFi.begin(ssid);
+Wifi::wl_status_t Wifi::Device::begin(const char *ssid) {
+    return static_cast<Wifi::wl_status_t>(WiFi.begin(ssid));
 }
 
-int Wifi::Device::begin(const char *ssid, const char *passphrase) {
-    return WiFi.begin(ssid, passphrase);
+Wifi::wl_status_t Wifi::Device::begin(const char *ssid, const char *passphrase) {
+#if defined(ARDUINO_ARCH_ESP8266)
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+#endif
+    return static_cast<Wifi::wl_status_t>(WiFi.begin(ssid, passphrase));
 }
+
+
 
 void Wifi::Device::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns_server1, IPAddress dns_server2) {
+#if defined(ARDUINO_SAMD_MKRWIFI1010)
+    WiFi.config(local_ip,dns_server1,gateway,subnet);
+    WiFi.setDNS(dns_server1, dns_server2);
+#elif defined(ARDUINO_ARCH_ESP8266)
     WiFi.config(local_ip,gateway,subnet,dns_server1,dns_server2);
+#endif
 }
 
 void Wifi::Device::setHostname(const char *name) {
@@ -93,4 +104,15 @@ uint8_t  Wifi::Device::status() {
 
 int     Wifi::Device::hostByName(const char *aHostname, IPAddress *aResult) {
     return WiFi.hostByName(aHostname, *aResult);
+}
+
+Wifi::wl_status_t Wifi::Device::beginAndConnect(const char *ssid, const char *passphrase) {
+    if (status() == Wifi::WL_NO_MODULE) {
+        return Wifi::WL_NO_MODULE;
+    }
+    begin(ssid, passphrase);
+    while ( status() != Wifi::WL_CONNECTED) {
+        delay(500);
+    }
+    return Wifi::WL_CONNECTED;
 }
