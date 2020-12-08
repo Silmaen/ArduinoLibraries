@@ -139,6 +139,7 @@ namespace bme280 {
             if (read8(Registers::R_ID) == chipId) {
                 presence() = true;
             }
+            Serial.println(read8(Registers::R_ID),HEX);
             return presence();
         }
 

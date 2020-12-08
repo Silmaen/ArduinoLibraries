@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8.2)
-set(CMAKE_VERBOSE_MAKEFILE False)
+set(CMAKE_VERBOSE_MAKEFILE True)
 # My boards...
 if (BOARD STREQUAL "mkrwifi")
     set(ARDUINO_BOARD "Arduino MKR WiFi 1010 [samd.mkrwifi1010]") # Arduino MKR WiFi 1010
