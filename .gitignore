@@ -35,6 +35,7 @@ cmake-*
 .idea
 Adafruit*
 Arduino_*
+DCCpp
 Grove*
 HAMqttDevice
 Kalman_Filter_Library

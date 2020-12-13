@@ -3,9 +3,8 @@
 //
 
 #pragma once
-#include <vector3d.h>
-
 #include <Wire.h>
+#include <vector3d.h>
 
 #if ARDUINO < 100
 #    error This library need Arduino  greater the 1.0.0
@@ -20,36 +19,55 @@ namespace i2c {
 
     class Address {
     public:
-        Address() =default;
-        ~Address() = default;
-        Address(const Address&) = default;
-        Address(Address&&) = default;
-        Address& operator=(const Address&)noexcept = default;
-        Address& operator=(Address&&)noexcept = default;
-        explicit Address(uint8_t addr):_addr{addr}{_addr&=addrMask;}
+        Address()                = default;
+        ~Address()               = default;
+        Address(const Address &) = default;
+        Address(Address &&)      = default;
+        Address &operator=(const Address &) noexcept = default;
+        Address &operator=(Address &&) noexcept = default;
+        explicit Address(uint8_t addr) : _addr{addr} { _addr &= addrMask; }
         // comparison
-        bool operator==(const Address& o){return _addr==o._addr;}
-        bool operator!=(const Address& o){return _addr!=o._addr;}
-        bool operator>(const Address& o){return _addr>o._addr;}
-        bool operator>=(const Address& o){return _addr>=o._addr;}
-        bool operator<(const Address& o){return _addr<o._addr;}
-        bool operator<=(const Address& o){return _addr<=o._addr;}
+        bool operator==(const Address &o) { return _addr == o._addr; }
+        bool operator!=(const Address &o) { return _addr != o._addr; }
+        bool operator>(const Address &o) { return _addr > o._addr; }
+        bool operator>=(const Address &o) { return _addr >= o._addr; }
+        bool operator<(const Address &o) { return _addr < o._addr; }
+        bool operator<=(const Address &o) { return _addr <= o._addr; }
         // address incrementation
-        Address& operator++(){if(_addr<addrMask)_addr+=2;return *this;}
-        Address operator++(int){Address t(*this); if(_addr<addrMask)_addr+=2;return t;}
-        Address& operator--(){if(_addr>1)_addr-=2;return *this;}
-        Address operator--(int){Address t(*this); if(_addr>1)_addr-=2;return t;}
+        Address &operator++() {
+            if (_addr < addrMask)
+                _addr += 2;
+            return *this;
+        }
+        Address operator++(int) {
+            Address t(*this);
+            if (_addr < addrMask)
+                _addr += 2;
+            return t;
+        }
+        Address &operator--() {
+            if (_addr > 1)
+                _addr -= 2;
+            return *this;
+        }
+        Address operator--(int) {
+            Address t(*this);
+            if (_addr > 1)
+                _addr -= 2;
+            return t;
+        }
         Address next();
         Address previous();
         // address position
-        bool isFirst(){return (_addr & addrMask)==0;}
-        bool isLast(){return (_addr & addrMask)==addrMask;}
+        bool isFirst() { return (_addr & addrMask) == 0; }
+        bool isLast() { return (_addr & addrMask) == addrMask; }
         // address is
         bool isReserved();
 
-        uint8_t to7bits(){return _addr>>1U;}
+        uint8_t to7bits() { return _addr >> 1U; }
+
     private:
-        uint8_t _addr = 0x00;
+        uint8_t                  _addr    = 0x00;
         static constexpr uint8_t addrMask = 0xFE;
     };
 
@@ -91,17 +109,16 @@ namespace i2c {
             return _dta;
         }
 
-        bool presence()const noexcept {return is_present;}
+        bool  presence() const noexcept { return is_present; }
         bool &presence() noexcept { return is_present; }
 
         /**
          * \brief measure the temperature of the device
          * \return the measured temperature (the absolute 0 if not available)
          */
-        [[nodiscard]] virtual float getTemperature()const { return absoluteZero; }
+        [[nodiscard]] virtual float getTemperature() const { return absoluteZero; }
 
         virtual void print_config() = 0;
-
 
         resultType  data() const noexcept { return _dta; }
         resultType &data() noexcept { return _dta; }
@@ -143,7 +160,7 @@ namespace i2c {
          * \param reg the register to read
          * \return the value as signed integer
          */
-        [[nodiscard]] int16_t readS8(byte reg) const { return static_cast<int8_t>(read8(reg)); }
+        [[nodiscard]] int8_t readS8(byte reg) const { return static_cast<int8_t>(read8(reg)); }
 
         /**
          * \brief read the 2 bytes at the given register in the given device
@@ -172,7 +189,9 @@ namespace i2c {
          * \param lowFirst if true the lowest byte is get first
          * \return the value as signed integer
          */
-        [[nodiscard]] int16_t readS16(byte reg, bool lowFirst = false) const { return static_cast<int16_t>(read16(reg, lowFirst)); }
+        [[nodiscard]] int16_t readS16(byte reg, bool lowFirst = false) const {
+            return static_cast<int16_t>(read16(reg, lowFirst));
+        }
 
         /**
          * \brief read the 3 bytes at the given register in the given device
@@ -214,18 +233,18 @@ namespace i2c {
             if (lowFirst) {
                 // Shift values to create properly formed integer
                 return math::vec3s16{static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
-                               static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
-                               static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift))};
+                                     static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift)),
+                                     static_cast<int16_t>(_read() | static_cast<uint16_t>(_read() << byte_shift))};
             }
             // Shift values to create properly formed integer
             return math::vec3s16{static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
-                           static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
-                           static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read())};
+                                 static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read()),
+                                 static_cast<int16_t>(static_cast<uint16_t>(_read() << byte_shift) | _read())};
         }
 
     private:
-        resultType _dta = resultType() ; ///< the raw data
-        bool is_present = false; ///< if the device has been found
+        resultType _dta       = resultType(); ///< the raw data
+        bool       is_present = false;        ///< if the device has been found
         /**
          * \brief read on unsigned byte on the bus
          * \return the byte read
