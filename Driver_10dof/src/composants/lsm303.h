@@ -281,6 +281,17 @@ namespace lsm303 {
                 break;
             }
         }
+
+        /**
+         * \brief read in the device for the acceleration data
+         */
+        const math::vec3f &measure_fast()  {
+            math::vec3s16 raw = readV16(OUT_X_L_A  | 0x80,true);
+            data() = math::vec3f{static_cast<float>(raw.x() >> 4) * factor,
+                                 static_cast<float>(raw.y() >> 4) * factor,
+                                 static_cast<float>(raw.z() >> 4) * factor};
+            return data();
+        }
     private:
 
         /**
