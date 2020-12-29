@@ -64,6 +64,7 @@ foreach (ex ${EXAMPLES})
             DEPENDS ${ex}/${ex_name}.ino
             COMMAND ${CMAKE_COMMAND} -E copy ${ex}/${ex_name}.ino ${INO_CPP}
     )
+    target_include_directories(${EXAMPLE_PROJECT_NAME} PUBLIC ${ex})
     target_link_arduino_libraries(${EXAMPLE_PROJECT_NAME} PRIVATE ${EXT_LIB_NEEDED})
     target_link_libraries(${EXAMPLE_PROJECT_NAME} PRIVATE ${LIB_NAME} ${INT_LIB_NEEDED})
     add_dependencies(All_examples ${EXAMPLE_PROJECT_NAME})

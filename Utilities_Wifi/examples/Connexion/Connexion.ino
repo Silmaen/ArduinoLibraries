@@ -1,13 +1,5 @@
 /*
-
- This example connects to an unencrypted Wifi network.
- Then it prints the  MAC address of the Wifi module,
- the IP address obtained, and other network details.
-
- created 13 July 2010
- by dlf (Metodo2 srl)
- modified 31 May 2012
- by Tom Igoe
+ *
  */
 #include <Wifi_Device.h>
 
@@ -18,13 +10,40 @@ char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as k
 int status = Wifi::WL_IDLE_STATUS;     // the Wifi radio's status
 
 Wifi::Device WiFi_d;
+void printWifiData() {
+    // print your board's IP address:
+    IPAddress ip = WiFi_d.localIP();
+    Serial.print("IP Address: ");
+    Serial.println(ip);
+    Serial.println(ip);
+
+    // print your MAC address:
+    network::MacAddress mac =WiFi_d.macAddress();
+    Serial.print("MAC address: ");
+    Serial.println(mac.toString());
+}
+
+void printCurrentNet() {
+    // print the SSID of the network you're attached to:
+    Serial.print("SSID: ");
+    Serial.println(WiFi_d.SSID());
+
+    // print the MAC address of the router you're attached to:
+    network::MacAddress bssid=WiFi_d.BSSID();
+    Serial.print("BSSID: ");
+    Serial.println(bssid.toString());
+
+    // print the received signal strength:
+    long rssi = WiFi_d.RSSI();
+    Serial.print("signal strength (RSSI):");
+    Serial.println(rssi);
+}
+
 
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  while (!Serial)  ; // wait for serial port to connect. Needed for native USB port only
 
   // check for the WiFi module:
   if (WiFi_d.beginAndConnect(ssid, pass) == Wifi::WL_NO_MODULE) {
@@ -32,13 +51,10 @@ void setup() {
     // don't continue
     while (true);
   }
-
   // you're connected now, so print out the data:
   Serial.println("You're connected to the network");
   printWifiData();
-
   printCurrentNet();
-
 }
 
 void loop() {
@@ -47,47 +63,3 @@ void loop() {
   printCurrentNet();
 }
 
-void printWifiData() {
-  // print your board's IP address:
-  IPAddress ip = WiFi_d.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-  Serial.println(ip);
-
-  // print your MAC address:
-  byte mac[6];
-  WiFi_d.macAddress(mac);
-  Serial.print("MAC address: ");
-  printMacAddress(mac);
-}
-
-void printCurrentNet() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi_d.SSID());
-
-  // print the MAC address of the router you're attached to:
-  byte bssid[6];
-    WiFi_d.BSSID(bssid);
-  Serial.print("BSSID: ");
-  printMacAddress(bssid);
-
-  // print the received signal strength:
-  long rssi = WiFi_d.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.println(rssi);
-
-}
-
-void printMacAddress(byte mac[]) {
-  for (int i = 5; i >= 0; i--) {
-    if (mac[i] < 16) {
-      Serial.print("0");
-    }
-    Serial.print(mac[i], HEX);
-    if (i > 0) {
-      Serial.print(":");
-    }
-  }
-  Serial.println();
-}

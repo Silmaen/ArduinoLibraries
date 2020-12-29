@@ -67,7 +67,7 @@ namespace lsm303 {
             HZ_50     = 0b01000000, ///< 50Hz
             HZ_100    = 0b01010000, ///< 100Hz (default)
             HZ_200    = 0b01100000, ///< 200Hz
-            HZ_400    = 0b01110000, ///< 200Hz
+            HZ_400    = 0b01110000, ///< 400Hz
             HZ_LP1620 = 0b10000000, ///< 1620Hz Low Power only
             HZ_ULTRA  = 0b10010000, ///< 1344Hz in normal mode, 5376Hz in Low Power Mode
         };

@@ -5,6 +5,7 @@
 #pragma once
 #include <Arduino.h>
 #include <IPAddress.h>
+#include "MacAddress.h"
 
 namespace Wifi {
 
@@ -72,7 +73,7 @@ public:
      *
      * \return pointer to uint8_t array with length wlMacAddrLength
      */
-    uint8_t* macAddress(uint8_t* mac);
+    network::MacAddress macAddress();
 
     /**
      * \brief Get the interface IP address.
@@ -99,7 +100,7 @@ public:
      * \brief Return the current SSID associated with the network
      * \return ssid string
      */
-    const char* SSID();
+    String SSID();
 
     /**
      * \brief Return the current BSSID associated with the network.
@@ -107,7 +108,7 @@ public:
      * It is the MAC address of the Access Point
      * \return pointer to uint8_t array with length WL_MAC_ADDR_LENGTH
      */
-    uint8_t* BSSID(uint8_t* bssid=nullptr);
+    network::MacAddress BSSID();
 
     /**
      * \brief Return the current RSSI /Received Signal Strength in dBm) associated with the network
@@ -127,9 +128,9 @@ public:
      * \param networkItem specify from which network item want to get the information
      * \return ssid string of the specified item on the networks scanned list
      */
-    const char*	SSID(uint8_t networkItem);
+    String	SSID(uint8_t networkItem);
 
-    uint8_t* BSSID(uint8_t networkItem, uint8_t* bssid=nullptr);
+    network::MacAddress BSSID(uint8_t networkItem, uint8_t* bssid=nullptr);
     uint8_t channel(uint8_t networkItem);
 
     /**
