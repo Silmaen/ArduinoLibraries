@@ -41,6 +41,7 @@ HAMqttDevice
 Kalman_Filter_Library
 MQTT
 Mirf
+RC_ESC
 RTClib
 RTCZero
 SdFat
