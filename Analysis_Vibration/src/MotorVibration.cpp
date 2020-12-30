@@ -14,30 +14,27 @@ void motorVibration::begin() {
     motorDevice.arm();
 }
 void motorVibration::measure() {
-    Serial.println("Clear Buffer");
     motorDevice.throttle(option.motorThrottle);
     delay(option.wait); // wait for the motor to accelerate before measure
-    Serial.println("Begin Measure");
     uint64_t tstart = micros();
-    uint64_t ts,i=0;
+    uint64_t ts;
     do {
         ts = micros() - tstart;
         Serial.print(static_cast<int>(ts));
         Serial.print(" ");
         math::vec3f r = accDevice.measure_fast();
-        Serial.print(r.x(),6);
+        Serial.print(r.x(),4);
         Serial.print(" ");
-        Serial.print(r.y(),6);
+        Serial.print(r.y(),4);
         Serial.print(" ");
-        Serial.print(r.z(),6);
+        Serial.print(r.z(),4);
         Serial.print(" ");
         pm06Measure v = powerModule.measure();
-        Serial.print(v.V5,6);
+        Serial.print(v.V5,4);
         Serial.print(" ");
-        Serial.print(v.Vbatt,6);
+        Serial.print(v.Vbatt,4);
         Serial.print(" ");
-        Serial.println(v.Ibatt,6);
+        Serial.println(v.Ibatt,4);
     }while(ts < option.testDuration);
     motorDevice.throttle(0);
-    Serial.println("End Measure");
 }
