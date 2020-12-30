@@ -1,0 +1,10 @@
+pm06 KEYWORD1
+
+setMeasured5V KEYWORD2
+setMeasuredV KEYWORD2
+setMeasuredI KEYWORD2
+measure KEYWORD2
+getCoef KEYWORD2
+setVoltage5VDivider KEYWORD2
+setVoltageDivider KEYWORD2
+setCurrentDivider KEYWORD2
