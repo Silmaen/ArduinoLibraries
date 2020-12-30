@@ -48,32 +48,32 @@ void loop() {
             Serial.println(F("RDY"));
             return;
         }
-        if (message.startsWith(F("set_mwait"))) {
+        if (message.startsWith(F("set_wait"))) {
             int    a   = message.indexOf(' ');
             String val = message.substring(a);
             val.trim();
             device.setInitialWait(val.toInt());
-            Serial.print(F("Measure delay set to: "));
+            Serial.print(F("Motor delay set to: "));
             Serial.println((int)device.getInitialWait());
             Serial.println(F("RDY"));
             return;
         }
-        if (message.startsWith(F("get_mwait"))) {
+        if (message.startsWith(F("get_wait"))) {
             Serial.println((int)device.getInitialWait());
             Serial.println(F("RDY"));
             return;
         }
-        if (message.startsWith(F("set_mthrottle"))) {
+        if (message.startsWith(F("set_throttle"))) {
             int    a   = message.indexOf(' ');
             String val = message.substring(a);
             val.trim();
             device.setMotorThrottle(val.toInt());
-            Serial.print(F("Measure delay set to: "));
+            Serial.print(F("Motor throttle set to: "));
             Serial.println((int)device.getMotorThrottle());
             Serial.println(F("RDY"));
             return;
         }
-        if (message.startsWith(F("get_mthrottle"))) {
+        if (message.startsWith(F("get_throttle"))) {
             Serial.println((int)device.getMotorThrottle());
             Serial.println(F("RDY"));
             return;
