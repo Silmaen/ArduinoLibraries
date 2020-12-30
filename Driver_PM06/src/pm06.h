@@ -16,6 +16,7 @@ constexpr float resolution = 5.0 / 1023.;
 #endif
 
 struct pm06Measure {
+    explicit pm06Measure(float v5=0,float vb=0,float ib=0):V5{v5},Vbatt{vb},Ibatt(ib){}
     float V5 = 0;
     float Vbatt = 0;
     float Ibatt = 0;

@@ -1,14 +1,12 @@
 #include <esc.h>
 #include <Arduino.h>
 
-esc myEsc(5, 980,2005,980);
+esc myEsc(5, 982,2006,982);
 
 void setup() {
     Serial.begin(115200);
     while(!Serial);
     Serial.println("System is starting.");
-    myEsc.setMinMax();
-    Serial.println("System in ready.");
 }
 
 float throttle = 0.;
