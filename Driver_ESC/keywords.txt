@@ -1,1 +1,10 @@
+esc KEYWORD1
 
+arm KEYWORD2
+stop KEYWORD2
+output KEYWORD2
+getOutSignal KEYWORD2
+setStopPulse KEYWORD2
+setMinMax KEYWORD2
+throttle KEYWORD2
+getThrottle KEYWORD2

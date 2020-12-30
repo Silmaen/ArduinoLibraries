@@ -1,13 +1,13 @@
 #include <esc.h>
 #include <Arduino.h>
 
-Esc myEsc(5);
+esc myEsc(5, 980,2005,980);
 
 void setup() {
     Serial.begin(115200);
     while(!Serial);
     Serial.println("System is starting.");
-    myEsc.setMinMax(958,2005);
+    myEsc.setMinMax();
     Serial.println("System in ready.");
 }
 
@@ -16,11 +16,14 @@ float throttle = 0.;
 void loop() {
     Serial.println("Test Acceleration.");
     myEsc.arm();
-    while(throttle < 0.20) {
-        throttle += 0.05;
+    throttle = 0.;
+    while(throttle < 20) {
+        throttle += 5;
         myEsc.throttle(throttle);
         Serial.print("Throttle set to: ");
         Serial.print(throttle);
+        Serial.print(" -- ");
+        Serial.print(myEsc.getOutSignal());
         Serial.println(".");
         delay(500);
     }

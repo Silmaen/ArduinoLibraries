@@ -3,45 +3,49 @@
 //
 #include "esc.h"
 
-Esc::Esc(uint8_t pin, uint16_t outputMin, uint16_t outputMax, uint16_t armVal) :
+esc::esc(uint8_t pin, uint16_t outputMin, uint16_t outputMax, uint16_t armVal) :
     pin{pin}, oMin{outputMin}, oMax{outputMax}, oArm{armVal} {}
-Esc::~Esc() = default;
 
-void Esc::arm() {
-    myESC.attach(pin); // attaches the ESC on pin oPin to the ESC object
-    myESC.writeMicroseconds(oArm);
+
+void esc::arm() {
+    myEsc.attach(pin); // attaches the ESC on pin oPin to the ESC object
+    myEsc.writeMicroseconds(oArm);
     oEsc = oArm;
     armed = true;
 }
 
-void Esc::stop() {
-    myESC.writeMicroseconds(stopPulse);
+void esc::stop() {
+    myEsc.writeMicroseconds(stopPulse);
     oEsc = stopPulse;
     armed = false;
 }
 
-void Esc::output(uint16_t escVal) {
+void esc::output(uint16_t escVal) {
     if (! armed)
         return;
     oEsc = constrain(escVal, oMin, oMax);
-    myESC.writeMicroseconds(oEsc);
+    myEsc.writeMicroseconds(oEsc);
 }
 
-void Esc::setMinMax(uint16_t outMin, uint16_t outMax){
+void esc::setMinMax(uint16_t outMin, uint16_t outMax, uint16_t arm){
     if (armed)
         stop();
     oMin = min(outMin, outMax);
     oMax = max(outMin, outMax);
+    if (arm==0)
+        oArm =oMin;
+    else
+        oArm = arm;
 }
 
-void Esc::throttle(float percent) {
+void esc::throttle(float percent) {
     if (! armed)
         return;
     oEsc = oMin + static_cast<uint16_t>(percent/100.F * static_cast<float>(oMax-oMin));
-    myESC.writeMicroseconds(oEsc);
+    myEsc.writeMicroseconds(oEsc);
 }
 
-float Esc::getThrottle() const {
+float esc::getThrottle() const {
     if (!armed)
         return -1;
     return 100.F * static_cast<float>(oEsc-oMin)/static_cast<float>(oMax-oMin);

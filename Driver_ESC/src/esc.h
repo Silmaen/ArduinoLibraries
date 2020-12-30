@@ -9,16 +9,14 @@
 constexpr uint16_t defaultOutputMin        = 1000U;
 constexpr uint16_t defaultOutputMax        = 2000U;
 constexpr uint16_t defaultOutputArming     = 500U;
-constexpr uint16_t defaultCalibrationDelay = 8000U;
 constexpr uint16_t defaultStopPulse        = 500U;
 
-class Esc {
+class esc {
 public:
-    explicit Esc(uint8_t  pin,
+    explicit esc(uint8_t  pin,
                  uint16_t outputMin = defaultOutputMin,
                  uint16_t outputMax = defaultOutputMax,
                  uint16_t armVal    = defaultOutputArming);
-    ~Esc();
 
     /**
      * \brief Sent a signal to Arm the ESC
@@ -55,8 +53,9 @@ public:
      * \brief Set the current Stop pulse in microseconds
      * \param[in] min the min value
      * \param[in] max  the max value
+     * \param[in] arm  the max value
      */
-    void setMinMax(uint16_t min, uint16_t max);
+    void setMinMax(uint16_t min, uint16_t max, uint16_t arm=0);
 
     /**
      * \brief set the throttle as a percent
@@ -78,5 +77,5 @@ private:
     uint16_t oArm             = defaultOutputArming;
     uint16_t stopPulse        = defaultStopPulse;        // Stop pulse (microseconds)
     bool armed = false;
-    Servo    myESC;                                      // create servo object to control an ESC
+    Servo    myEsc;                                      // create servo object to control an ESC
 };
