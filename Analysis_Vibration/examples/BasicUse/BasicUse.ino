@@ -4,19 +4,20 @@ motorVibration device(rc_pin);
 
 void setup() {
     Serial.begin(115200);
-    while (!Serial);
+    while (!Serial)
+        ;
     Serial.println(F("System is starting."));
     device.begin();
     Serial.println(F("System in ready."));
     Serial.println(F("RDY"));
 }
 
-void measure(){
-    Serial.println(F("MES"));
-    device.measure();
-    Serial.println(F("RDY"));
+void measure(bool binary=false) {
+    device.measure(binary);
 }
+
 uint64_t tstart = 0, ts;
+bool binary = false;
 
 void loop() {
     if (Serial.available()) {
@@ -30,7 +31,22 @@ void loop() {
         if (message.startsWith(F("measure"))) {
             Serial.println(F("Begin Measure"));
             tstart = micros();
-            measure();
+            measure(binary);
+            return;
+        }
+        if (message.startsWith(F("set_binary"))) {
+            binary = true;
+            return;
+        }
+        if (message.startsWith(F("set_ascii"))) {
+            binary = false;
+            return;
+        }
+        if (message.startsWith(F("get_format"))) {
+            if (binary)
+                Serial.println("binary");
+            else
+                Serial.println("ascii");
             return;
         }
         if (message.startsWith(F("set_mtime"))) {
