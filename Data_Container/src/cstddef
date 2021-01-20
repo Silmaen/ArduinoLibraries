@@ -1,0 +1,13 @@
+/**
+ * \author argawaen
+ * \date 20/01/2021
+ *
+ */
+
+#pragma once
+#include <stddef.h>
+
+namespace astd {
+  using a_diff_t = ::ptrdiff_t;
+  using a_size_t = ::size_t;
+}

@@ -1,0 +1,399 @@
+/**
+ * \author argawaen
+ * \date 18/01/2021
+ *
+ */
+
+#pragma once
+#include "algorithm"
+#include "func_exception"
+#include "initializer_list"
+#include "iterator"
+#include "memory"
+#include "type_traits"
+
+namespace astd {
+
+    template<class T, class Allocator = allocator<T>>
+    class vector;
+    template<class T, class Allocator>
+    bool operator==(const vector<T, Allocator> &x, const vector<T, Allocator> &y);
+    template<class T, class Allocator>
+    bool operator<(const vector<T, Allocator> &x, const vector<T, Allocator> &y);
+    template<class T, class Allocator>
+    bool operator!=(const vector<T, Allocator> &x, const vector<T, Allocator> &y);
+    template<class T, class Allocator>
+    bool operator>(const vector<T, Allocator> &x, const vector<T, Allocator> &y);
+    template<class T, class Allocator>
+    bool operator>=(const vector<T, Allocator> &x, const vector<T, Allocator> &y);
+    template<class T, class Allocator>
+    bool operator<=(const vector<T, Allocator> &x, const vector<T, Allocator> &y);
+    template<class T, class Allocator>
+    void swap(vector<T, Allocator> &x, vector<T, Allocator> &y);
+
+    template<class T, class Allocator>
+    class vector {
+    public:
+        using value_type             = T;
+        using size_type              = typename Allocator::size_type;
+        using difference_type        = typename Allocator::difference_type;
+        using reference              = typename Allocator::reference;
+        using const_reference        = typename Allocator::const_reference;
+        using pointer                = typename Allocator::pointer;
+        using const_pointer          = typename Allocator::const_pointer;
+        using allocator_type         = Allocator;
+        using iterator               = T *;
+        using const_iterator         = const T *;
+        using reverse_iterator       = astd::reverse_iterator<iterator>;
+        using const_reverse_iterator = astd::reverse_iterator<const_iterator>;
+
+        explicit vector(const Allocator &al = Allocator()) :
+            data(0), // defaultValue(T()),
+            data_size(ASTD_BUFFER_SIZE), elements(0), a(al) {
+            data = a.allocate(data_size);
+        }
+
+        explicit vector(size_type n, const T &value = T(), const Allocator &al = Allocator()) :
+            data(0), data_size(0), elements(0), a(al) {
+            data_size = n + ASTD_BUFFER_SIZE;
+            data      = a.allocate(data_size);
+
+            resize(n, value);
+        }
+
+        template<class InputIterator>
+        vector(InputIterator first, InputIterator last, const Allocator &al = Allocator()) :
+            data(0), data_size(ASTD_BUFFER_SIZE), elements(0), a(al) {
+            data = a.allocate(data_size);
+            assign(first, last);
+        }
+
+        vector(const vector<T, Allocator> &x) {
+            a = x.a;
+
+            elements  = x.elements;
+            data_size = elements + ASTD_BUFFER_SIZE;
+            data      = a.allocate(data_size);
+
+            for (size_type i = 0; i < elements; i++) {
+                a.construct(data + i, x.data[i]);
+            }
+        }
+
+        vector(initializer_list<T> in, const Allocator &al = Allocator()) : a(al) {
+            data_size = in.size() + ASTD_BUFFER_SIZE;
+            elements  = in.size();
+            data      = a.allocate(data_size);
+            for (size_type i = 0; i < elements; i++)
+                a.construct(data + i, *(in.begin() + i));
+        }
+
+        ~vector(); // Below
+
+        vector<T, Allocator> &operator=(const vector<T, Allocator> &x) {
+            if (&x == this) {
+                return *this;
+            }
+
+            reserve(x.elements); // Make sure that we have enough actual memory
+
+            // Copy as many elements as possible
+
+            size_t minElements = elements;
+            if (minElements > x.elements) {
+                minElements = x.elements;
+            }
+            for (size_t i = 0; i < minElements; ++i) {
+                data[i] = x.data[i];
+            }
+
+            // If we need to add new elements
+            if (elements < x.elements) {
+                for (size_t i = elements; i < x.elements; ++i) {
+                    a.construct(data + i, x.data[i]);
+                    ++elements;
+                }
+            }
+
+            if (elements > x.elements) {
+                downsize(x.elements);
+            }
+
+            return *this;
+        }
+
+        template<class InputIterator>
+        void assign(InputIterator first, InputIterator last) {
+            clear();
+            insert(begin(), first, last);
+        }
+
+        template<class Size, class U>
+        void assign(Size n, const U &u = U()) {
+            clear();
+            resize(n, u);
+        }
+
+        void assign(initializer_list<value_type> in) {
+            clear();
+            insert(begin(), in.begin(), in.end());
+        }
+
+        inline allocator_type get_allocator() const { return a; }
+
+        inline iterator begin() { return data; }
+
+        inline const_iterator begin() const { return data; }
+
+        inline iterator end() { return (data + elements); }
+
+        inline const_iterator end() const { return (data + elements); }
+
+        inline reverse_iterator rbegin() { return reverse_iterator(end()); }
+
+        inline const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+
+        inline reverse_iterator rend() { return reverse_iterator(begin()); }
+
+        inline const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
+        inline size_type size() const { return elements; }
+
+        size_type max_size() const { return ((size_type)(-1)) / sizeof(T); }
+
+        void downsize(size_type sz);
+        void resize(size_type sz, const T &c = T());
+
+        inline size_type capacity() const { return data_size; }
+
+        inline bool empty() const { return (size() == 0); }
+
+        void reserve(size_type n);
+
+        inline reference operator[](size_type n) { return data[n]; }
+
+        inline const_reference operator[](size_type n) const { return data[n]; }
+
+        const_reference at(size_type n) const {
+            if (n >= elements) {
+                __throw_out_of_range("Invalid subscript");
+            }
+            return data[n];
+        }
+
+        reference at(size_type n) {
+            if (n >= elements) {
+                __throw_out_of_range("Invalid subscript");
+            }
+            return data[n];
+        }
+
+        inline reference front() { return data[0]; }
+
+        inline const_reference front() const { return data[0]; }
+
+        inline reference back() { return data[size() - 1]; }
+
+        inline const_reference back() const { return data[size() - 1]; }
+
+        inline void push_back(const T &x) { resize(size() + 1, x); }
+
+        inline void pop_back() { downsize(size() - 1); }
+
+        iterator insert(iterator position, const T &x = T()) {
+            size_type index = position - data;
+            resize(size() + 1, x);
+            for (size_type i = elements - 1; i > index; --i) {
+                data[i] = data[i - 1];
+            }
+            data[index] = x;
+            return (data + index);
+        }
+
+        void _insert_fill(iterator position, size_type n, const T &x) {
+            size_type index = position - data;
+            resize(size() + n, x);
+
+            for (size_type i = elements - 1; (i > (index + n - 1)); --i) {
+                data[i] = data[i - n];
+            }
+            for (size_type i = 0; i < n; i++) {
+                data[i + index] = x;
+            }
+        }
+
+        template<class InputIterator>
+        void _insert_from_iterator(iterator position, InputIterator first, InputIterator last) {
+            T temp;
+            while (first != last) {
+                temp     = *first;
+                position = insert(position, temp);
+                ++position;
+                ++first;
+            }
+        }
+
+        template<class InputIterator>
+        inline void _dispatch_insert(iterator position, InputIterator first, InputIterator last, __true_type) {
+            _insert_fill(position, first, last);
+        }
+
+        template<class InputIterator>
+        inline void _dispatch_insert(iterator position, InputIterator first, InputIterator last, __false_type) {
+            _insert_from_iterator(position, first, last);
+        }
+
+        inline void insert(iterator position, size_type n, const T &x) { _insert_fill(position, n, x); }
+
+        template<class InputIterator>
+        inline void insert(iterator position, InputIterator first, InputIterator last) {
+            typedef typename __is_integer<InputIterator>::value __some_type;
+            _dispatch_insert(position, first, last, __some_type());
+        }
+
+        iterator erase(iterator position) {
+            size_type index = position - data;
+            for (size_type i = index; i < (elements - 1); ++i) {
+                data[i] = data[i + 1];
+            }
+            downsize(size() - 1);
+            return (data + index);
+        }
+
+        iterator erase(iterator first, iterator last) {
+            size_type index = first - data;
+            size_type width = last - first;
+            for (size_type i = index; i < (elements - width); ++i) {
+                data[i] = data[i + width];
+            }
+            downsize(size() - width);
+            return (data + index);
+        }
+
+        void swap(vector<T, Allocator> &v) {
+            if (this == &v) { // Avoid dv.swap(v)
+                return;
+            }
+            T *       ptr;
+            size_type temp;
+
+            // Swap pointers first
+            ptr    = data;
+            data   = v.data;
+            v.data = ptr;
+
+            // Swap element counts
+            temp       = elements;
+            elements   = v.elements;
+            v.elements = temp;
+
+            // Swap data size
+            temp        = data_size;
+            data_size   = v.data_size;
+            v.data_size = temp;
+        }
+
+        void clear() { downsize(0); }
+
+    protected:
+        T *       data;
+        size_type data_size;
+        size_type elements;
+        Allocator a;
+    };
+
+    // Here go template instantiations
+    template<class T, class Allocator>
+    vector<T, Allocator>::~vector() {
+        for (size_t i = 0; i < elements; ++i) {
+            a.destroy(data + i);
+        }
+        a.deallocate(data, data_size);
+    }
+
+    template<class T, class Allocator>
+    void vector<T, Allocator>::reserve(size_type n) {
+        if (n > data_size) { // We never shrink...
+            T *       temp_ptr  = data;
+            size_type temp_size = data_size;
+
+            data_size = n;
+            data      = a.allocate(data_size);
+
+            for (size_type i = 0; i < elements; ++i) {
+                a.construct(data + i, temp_ptr[i]);
+                a.destroy(temp_ptr + i);
+            }
+            a.deallocate(temp_ptr, temp_size);
+        }
+    }
+
+    template<class T, class Allocator>
+    void vector<T, Allocator>::resize(size_type sz, const T &c) {
+        if (sz > elements) { // Need to actually call constructor
+            if (sz > data_size) {
+                reserve(sz + ASTD_BUFFER_SIZE);
+            }
+
+            for (size_type i = elements; i < sz; ++i) {
+                a.construct(data + i, c);
+            }
+            elements = sz;
+        } else {
+            downsize(sz);
+        }
+    }
+
+    template<class T, class Allocator>
+    void vector<T, Allocator>::downsize(size_type sz) {
+        if (sz < elements) { // Actually are downsizing
+            for (size_t i = sz; i < elements; ++i) {
+                a.destroy(data + i);
+            }
+            elements = sz;
+        }
+    }
+    template<class T, class Allocator>
+    bool operator==(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
+        if (x.size() != y.size()) {
+            return false;
+        }
+        for (size_t i = 0; i < x.size(); ++i) {
+            if (x[i] != y[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<class T, class Allocator>
+    bool operator<(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
+        less<typename iterator_traits<typename vector<T, Allocator>::iterator>::value_type> c;
+        return lexicographical_compare(x.begin(), x.end(), y.begin(), y.end(), c);
+    }
+    template<class T, class Allocator>
+    bool operator!=(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
+        return !(x == y);
+    }
+    template<class T, class Allocator>
+    bool operator>(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
+        greater<typename iterator_traits<typename vector<T, Allocator>::iterator>::value_type> c;
+        return lexicographical_compare(x.begin(), x.end(), y.begin(), y.end(), c);
+    }
+    template<class T, class Allocator>
+    bool operator>=(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
+        greater_equal<typename iterator_traits<typename vector<T, Allocator>::iterator>::value_type> c;
+        return lexicographical_compare(x.begin(), x.end(), y.begin(), y.end(), c);
+    }
+    template<class T, class Allocator>
+    bool operator<=(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
+        less_equal<typename iterator_traits<typename vector<T, Allocator>::iterator>::value_type> c;
+        return lexicographical_compare(x.begin(), x.end(), y.begin(), y.end(), c);
+    }
+
+    template<class T, class Allocator>
+    void swap(vector<T, Allocator> &x, vector<T, Allocator> &y) {
+        x.swap(y);
+    }
+
+} // namespace astd

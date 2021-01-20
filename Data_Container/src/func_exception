@@ -1,0 +1,16 @@
+/**
+ * \author argawaen
+ * \date 20/01/2021
+ *
+ */
+
+#pragma once
+#include "exception"
+
+namespace astd {
+    void __throw_bad_alloc();
+    void __throw_out_of_range(const char *message = 0);
+    void __throw_overflow_error(const char *message = 0);
+    void __throw_length_error(const char *message = 0);
+    void __throw_invalid_argument(const char *message = 0);
+} // namespace astd

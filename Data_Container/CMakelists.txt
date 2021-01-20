@@ -13,7 +13,20 @@ set(INT_LIB_NEEDED)
 # -------------------------------------------------------------------------------------------------------------------
 get_filename_component(LIB_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 file(GLOB_RECURSE SRCS *.cpp)
-file(GLOB_RECURSE HDRS *.h *.hpp)
+file(GLOB_RECURSE HDRS *.h *.hpp
+        algorithm
+        cstddef
+        cstdlib
+        exception
+        func_exception
+        functional
+        initializer_list
+        iterator
+        memory
+        type_traits
+        utility
+        vector
+    )
 
 if ("${SRCS}" STREQUAL "")
     message(STATUS "adding library ${LIB_NAME} INTERFACE")

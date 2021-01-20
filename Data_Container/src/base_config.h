@@ -6,11 +6,8 @@
 
 #pragma once
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_SAMD)
-#    include <cstdint>
-#elif defined(ARDUINO_ARCH_AVR)
-#    include <stdint.h>
-#endif
+#include <cstddef>
+
 
 #if __cplusplus >= 201703L
 #    define ASTD_NODISCARD [[__nodiscard__]]
@@ -33,9 +30,10 @@
 #    endif
 #endif
 
-namespace astd {
+#ifdef __GCC__
+#define ASTD_NORETURN __attribute__ ((__noreturn__))
+#else
+#define ASTD_NORETURN
+#endif
 
-    using a_size_t = uint16_t;
-    using a_diff_t = uint16_t;
-
-} // namespace astd
+#define ASTD_BUFFER_SIZE 8

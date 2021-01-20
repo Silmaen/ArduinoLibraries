@@ -1,0 +1,63 @@
+/**
+ * \author argawaen
+ * \date 20/01/2021
+ *
+ */
+
+#pragma once
+//#include "new"
+#include "cstddef"
+//#include "cstdlib"
+//#include "iterator_base"
+#include "utility"
+//#include "cstdio"
+
+namespace astd {
+
+    template <class T> class allocator;
+    // Specialize for void:
+
+    template <> class allocator<void> {
+      public:
+      using pointer =  void*;
+      using const_pointer = const void*;
+      using value_type = void  ;
+      template <class U> struct rebind { typedef allocator<U> other; };
+    };
+
+    template <class T> class allocator{
+      public:
+      using value_type = T ;
+      using size_type= a_size_t ;
+      using difference_type = a_diff_t ;
+
+      using pointer= T* ;
+      using const_pointer = const T* ;
+
+      using reference = T& ;
+      using const_reference = const T& ;
+
+      pointer address(reference r) const { return &r; }
+      const_pointer address(const_reference r) const { return &r; }
+
+      allocator() throw(){}
+      template <class U> allocator(const allocator<U>& ) throw();
+      ~allocator() throw(){}
+
+      //Space for n Ts
+      pointer allocate(size_type n, typename allocator<void>::const_pointer = 0){
+          return (T*)(::operator new( n * sizeof(T) ));
+      }
+      void deallocate(pointer p, size_type){
+          ::operator delete(p);
+      }
+
+      //Use placement new to engage the constructor
+      void construct(pointer p, const T& val) { new((void*)p) T(val); }
+      void destroy(pointer p){ ((T*)p)->~T(); }	//Call destructor
+
+      size_type max_size() const throw();
+      template<class U> struct rebind { typedef allocator<U> other; };
+
+    };
+}

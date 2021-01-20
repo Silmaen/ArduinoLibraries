@@ -4,16 +4,9 @@
  *
  */
 
-#include "vector.h"
+#include "vector"
 
 namespace astd {
 
-    template<class T>
-    vector<T>::~vector() {
-        delete data[_allocated];
-    }
-
-    template<class T>
-    void vector<T>::shrink_to_fit() {}
 
 } // namespace astd
